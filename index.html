@@ -5,14 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>BODIN 2 Lost & Found</title>
     <link rel="stylesheet" href="style.css">
-    <!-- Google Fonts: Prompt -->
     <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <!-- Font Awesome for Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
 
-    <!-- Navbar -->
     <nav class="navbar glass">
         <div class="nav-container">
             <a href="#" class="logo">
@@ -31,17 +28,14 @@
         </div>
     </nav>
 
-    <!-- Hero Section -->
     <header id="home" class="hero">
         <div class="hero-content fade-in-up">
             <h1>ของหาย <br><span class="highlight">ตามหาได้ที่นี่</span></h1>
-            <p>ระบบแจ้งและค้นหาสิ่งของสูญหายภายในโรงเรียนบดินทรเดชา (สิงห์ สิงหเสนี) ๒ รวดเร็ว ทันใจ และใช้งานง่าย</p>
-            
+            <p>ระบบแจ้งและค้นหาสิ่งของสูญหายภายในโรงเรียนบดินทรเดชา (สิงห์ สิงหเสนี) ๒</p>
             <div class="hero-search glass">
                 <i class="fas fa-search search-icon"></i>
-                <input type="text" id="searchInput" placeholder="ค้นหาชื่อสิ่งของ, สถานที่ หรือรายละเอียด...">
+                <input type="text" id="searchInput" placeholder="ค้นหาชื่อสิ่งของ...">
             </div>
-
             <div class="hero-buttons">
                 <a href="#post-section" class="btn-primary" onclick="setFormType('lost')"><i class="fas fa-bullhorn"></i> แจ้งของหาย</a>
                 <a href="#post-section" class="btn-secondary" onclick="setFormType('found')"><i class="fas fa-box-open"></i> แจ้งของที่พบ</a>
@@ -49,11 +43,9 @@
         </div>
         <div class="hero-image bounce">
             <img src="https://upload.wikimedia.org/wikipedia/th/thumb/f/f6/Bodin_decha_logo.png/600px-Bodin_decha_logo.png" alt="BODIN 2 School Logo">
-            <div class="glow-bg"></div>
         </div>
     </header>
 
-    <!-- Items Section -->
     <section id="items-section" class="items-section">
         <div class="section-header">
             <h2>รายการ <span class="highlight">ประกาศ</span></h2>
@@ -63,13 +55,9 @@
                 <button class="filter-btn" data-filter="found">ของที่พบ</button>
             </div>
         </div>
-
-        <div class="cards-grid" id="cardsContainer">
-            <!-- Cards will be loaded dynamically -->
-        </div>
+        <div class="cards-grid" id="cardsContainer"></div>
     </section>
 
-    <!-- Post Form Section -->
     <section id="post-section" class="post-section">
         <div class="form-container glass fade-in-up">
             <h2><i class="fas fa-edit"></i> ลงประกาศ<span class="highlight">สิ่งของ</span></h2>
@@ -87,17 +75,14 @@
                         </label>
                     </div>
                 </div>
-                
                 <div class="form-group">
                     <label for="itemName">ชื่อสิ่งของ *</label>
-                    <input type="text" id="itemName" placeholder="เช่น กระเป๋าสตางค์, บัตรนักเรียน, กุญแจ" required>
+                    <input type="text" id="itemName" placeholder="เช่น กระเป๋าสตางค์, บัตรนักเรียน" required>
                 </div>
-
                 <div class="form-group">
                     <label for="itemImage">รูปภาพสิ่งของ (ถ้ามี)</label>
                     <input type="file" id="itemImage" accept="image/*">
                 </div>
-
                 <div class="form-row">
                     <div class="form-group">
                         <label for="itemLocation">สถานที่ *</label>
@@ -108,33 +93,26 @@
                         <input type="date" id="itemDate" required>
                     </div>
                 </div>
-
                 <div class="form-group">
                     <label for="itemDetails">รายละเอียดเพิ่มเติม</label>
-                    <textarea id="itemDetails" rows="3" placeholder="ระบุลักษณะเด่น, สี, ยี่ห้อ ฯลฯ"></textarea>
+                    <textarea id="itemDetails" rows="3" placeholder="ระบุลักษณะเด่น, สี ฯลฯ"></textarea>
                 </div>
-
                 <div class="form-group">
                     <label for="itemContact">ช่องทางติดต่อ *</label>
-                    <input type="text" id="itemContact" placeholder="เบอร์โทรศัพท์, IG, Facebook หรือห้องเรียน" required>
+                    <input type="text" id="itemContact" placeholder="เบอร์โทรศัพท์, IG, หรือ Facebook" required>
                 </div>
-
                 <button type="submit" class="btn-primary w-100 btn-large"><i class="fas fa-paper-plane"></i> ลงประกาศทันที</button>
             </form>
         </div>
     </section>
 
-    <!-- Footer -->
     <footer>
         <div class="footer-content">
             <img src="https://upload.wikimedia.org/wikipedia/th/thumb/f/f6/Bodin_decha_logo.png/600px-Bodin_decha_logo.png" alt="BODIN 2" class="footer-logo">
-            <h3>BODIN 2 <span class="highlight">Lost & Found</span></h3>
-            <p>เว็บไซต์ระบบกลางสำหรับแจ้งและค้นหาสิ่งของสูญหายภายในโรงเรียน</p>
-            <p class="copyright">© 2026 Bodindecha (Sing Singhaseni) 2.</p>
+            <p>© 2026 Bodindecha (Sing Singhaseni) 2.</p>
         </div>
     </footer>
 
-    <!-- Main Script -->
     <script src="script.js"></script>
 </body>
 </html>
