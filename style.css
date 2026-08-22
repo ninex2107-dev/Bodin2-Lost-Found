@@ -1,257 +1,290 @@
-// Import Firebase SDKs
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-import { getFirestore, collection, addDoc, getDocs, query, orderBy, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
-
-// Your Firebase configuration (จากที่คุณส่งมา)
-const firebaseConfig = {
-  apiKey: "AIzaSyDnR8htQoEVm9qcEpz1dxJKoZxQwxNoUcw",
-  authDomain: "bodin2-lost-found.firebaseapp.com",
-  projectId: "bodin2-lost-found",
-  storageBucket: "bodin2-lost-found.firebasestorage.app",
-  messagingSenderId: "366439923477",
-  appId: "1:366439923477:web:28d23fabda49e02caa731c",
-  measurementId: "G-W0VKJ5KXBP"
-};
-
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getFirestore(app);
-const provider = new GoogleAuthProvider();
-
-let itemsData = [];
-let currentFilter = 'all';
-let currentUser = null;
-
-// ================= ระบบ Authentication = =================
-window.loginWithGoogle = function() {
-    signInWithPopup(auth, provider)
-    .then((result) => {
-        alert('เข้าสู่ระบบสำเร็จ!');
-    })
-    .catch((error) => {
-        console.error("Login Error:", error);
-        alert('เกิดข้อผิดพลาดในการเข้าสู่ระบบ: ' + error.message);
-    });
+/* ================= CSS Variables ================= */
+:root {
+    --primary-color: #0B192C;      
+    --primary-light: #1A365D;      
+    --highlight-color: #F59E0B;    
+    --secondary-color: #EC4899;    
+    --text-main: #F8FAFC;          
+    --text-muted: #CBD5E1;         
+    --glass-bg: rgba(255, 255, 255, 0.05);
+    --glass-border: rgba(255, 255, 255, 0.1);
+    --transition: all 0.3s ease;
 }
 
-window.logout = function() {
-    signOut(auth).then(() => {
-        alert('ออกจากระบบแล้ว');
-    }).catch((error) => {
-        console.error("Logout Error:", error);
-    });
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Prompt', sans-serif;
 }
 
-// ตรวจสอบสถานะ Login ตลอดเวลา
-onAuthStateChanged(auth, (user) => {
-    currentUser = user;
-    const loginBtn = document.getElementById('loginBtn');
-    const userProfile = document.getElementById('userProfile');
-    const loginWarning = document.getElementById('loginWarning');
-    const postForm = document.getElementById('postForm');
+html { scroll-behavior: smooth; }
 
-    if (user) {
-        // ถ้าล็อกอินแล้ว
-        if(loginBtn) loginBtn.style.display = 'none';
-        if(userProfile) userProfile.style.display = 'flex';
-        document.getElementById('userAvatar').src = user.photoURL || 'https://via.placeholder.com/32';
-        document.getElementById('userName').innerText = user.displayName || 'ผู้ใช้งาน';
-
-        if(loginWarning) loginWarning.style.display = 'none';
-        if(postForm) postForm.style.display = 'block';
-    } else {
-        // ถ้ายังไม่ล็อกอิน
-        if(loginBtn) loginBtn.style.display = 'inline-flex';
-        if(userProfile) userProfile.style.display = 'none';
-
-        if(loginWarning) loginWarning.style.display = 'block';
-        if(postForm) postForm.style.display = 'none';
-    }
-});
-
-// ================= โหลดข้อมูลจาก Firestore แบบ Realtime =================
-function initRealtimeData() {
-    const q = query(collection(db, "items"), orderBy("createdAt", "desc"));
-    
-    // ฟังการเปลี่ยนแปลงข้อมูลแบบ Real-time ทุกครั้งที่มีคนโพสต์
-    onSnapshot(q, (querySnapshot) => {
-        itemsData = [];
-        querySnapshot.forEach((doc) => {
-            itemsData.push({ id: doc.id, ...doc.data() });
-        });
-        filterData();
-    }, (error) => {
-        console.error("Error getting documents: ", error);
-    });
+body {
+    background-color: var(--primary-color);
+    background-image: 
+        radial-gradient(circle at 15% 50%, rgba(245, 158, 11, 0.08), transparent 25%),
+        radial-gradient(circle at 85% 30%, rgba(236, 72, 153, 0.08), transparent 25%);
+    color: var(--text-main);
+    overflow-x: hidden;
 }
 
-// ================= ระบบแสดงผลการ์ด =================
-function renderCards(dataToRender) {
-    const container = document.getElementById('cardsContainer');
-    if(!container) return;
-    container.innerHTML = '';
-
-    if (dataToRender.length === 0) {
-        container.innerHTML = `<p style="grid-column: 1/-1; text-align: center; color: var(--text-muted); padding: 40px;">ยังไม่มีประกาศสิ่งของในระบบ</p>`;
-        return;
-    }
-
-    dataToRender.forEach(item => {
-        const isLost = item.type === 'lost';
-        const badgeClass = isLost ? 'badge-lost' : 'badge-found';
-        const badgeText = isLost ? 'ของหาย' : 'เก็บได้';
-        const fallbackImage = isLost ? 'https://via.placeholder.com/400x250/2a1b38/ffffff?text=Lost+Item' : 'https://via.placeholder.com/400x250/1b382c/ffffff?text=Found+Item';
-        
-        let dateStr = item.date;
-        try {
-            const dateObj = new Date(item.date);
-            dateStr = dateObj.toLocaleDateString('th-TH', { year: 'numeric', month: 'short', day: 'numeric' });
-        } catch(e) {}
-
-        const cardHTML = `
-            <div class="card glass">
-                <div class="card-img-wrapper">
-                    <span class="card-badge ${badgeClass}">${badgeText}</span>
-                    <img src="${item.image || fallbackImage}" alt="${item.name}" onerror="this.src='${fallbackImage}'">
-                </div>
-                <div class="card-content">
-                    <h3 class="card-title">${item.name}</h3>
-                    <p class="card-desc">${item.details || 'ไม่มีรายละเอียดเพิ่มเติม'}</p>
-                    
-                    <div class="card-meta">
-                        <div><i class="fas fa-map-marker-alt"></i> ${item.location}</div>
-                        <div><i class="fas fa-calendar-alt"></i> ${dateStr}</div>
-                    </div>
-                    
-                    <div class="card-contact">
-                        <i class="fas fa-address-book"></i> ติดต่อ: ${item.contact}
-                    </div>
-                </div>
-            </div>
-        `;
-        container.insertAdjacentHTML('beforeend', cardHTML);
-    });
+.glass {
+    background: var(--glass-bg);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid var(--glass-border);
 }
 
-// ================= ระบบค้นหาและกรอง =================
-window.filterData = function() {
-    const searchInput = document.getElementById('searchInput');
-    const searchTerm = searchInput ? searchInput.value.toLowerCase() : '';
-    
-    const filtered = itemsData.filter(item => {
-        const matchType = currentFilter === 'all' || item.type === currentFilter;
-        const matchSearch = item.name.toLowerCase().includes(searchTerm) || 
-                            item.location.toLowerCase().includes(searchTerm) || 
-                            (item.details && item.details.toLowerCase().includes(searchTerm));
-        return matchType && matchSearch;
-    });
+h1, h2, h3 { font-weight: 700; line-height: 1.2; }
+.highlight { color: var(--highlight-color); }
+.w-100 { width: 100%; }
 
-    renderCards(filtered);
+button, .btn-primary, .btn-secondary {
+    cursor: pointer;
+    border: none;
+    outline: none;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 500;
+    transition: var(--transition);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    text-decoration: none;
+    padding: 10px 24px;
 }
 
-// Event Listeners
-document.addEventListener('DOMContentLoaded', () => {
-    const searchInput = document.getElementById('searchInput');
-    if(searchInput) searchInput.addEventListener('input', window.filterData);
+.btn-primary {
+    background: linear-gradient(135deg, #F59E0B, #D97706);
+    color: #fff;
+    box-shadow: 0 4px 15px rgba(245, 158, 11, 0.3);
+}
+.btn-primary:hover { transform: translateY(-2px); }
 
-    document.querySelectorAll('.filter-btn').forEach(btn => {
-        btn.addEventListener('click', (e) => {
-            document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-            e.target.classList.add('active');
-            currentFilter = e.target.getAttribute('data-filter');
-            window.filterData();
-        });
-    });
+.btn-secondary {
+    background: linear-gradient(135deg, #EC4899, #BE185D);
+    color: #fff;
+    box-shadow: 0 4px 15px rgba(236, 72, 153, 0.3);
+}
+.btn-secondary:hover { transform: translateY(-2px); }
 
-    // เซ็ตวันที่ปัจจุบันในฟอร์ม
-    const dateInput = document.getElementById('itemDate');
-    if(dateInput) dateInput.valueAsDate = new Date();
+.btn-large { padding: 14px 24px; font-size: 1.1rem; }
 
-    // เริ่มต้นเชื่อมฐานข้อมูลจริง
-    initRealtimeData();
-});
-
-window.setGlobalFilter = function(type) {
-    document.querySelectorAll('.filter-btn').forEach(b => {
-        if (b.getAttribute('data-filter') === type) {
-            b.click();
-        }
-    });
+/* User Profile UI */
+.user-profile {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: rgba(255,255,255,0.1);
+    padding: 5px 12px;
+    border-radius: 30px;
+    border: 1px solid var(--glass-border);
 }
 
-window.setFormType = function(type) {
-    const radio = document.querySelector(`input[name="itemType"][value="${type}"]`);
-    if(radio) radio.checked = true;
+.user-profile img {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    object-fit: cover;
 }
 
-// ================= ระบบบันทึกประกาศลง Firestore =================
-const postFormEl = document.getElementById('postForm');
-if(postFormEl) {
-    postFormEl.addEventListener('submit', async function(e) {
-        e.preventDefault();
-
-        if (!currentUser) {
-            alert('กรุณาเข้าสู่ระบบก่อนลงประกาศ');
-            return;
-        }
-
-        const type = document.querySelector('input[name="itemType"]:checked').value;
-        const name = document.getElementById('itemName').value;
-        const location = document.getElementById('itemLocation').value;
-        const date = document.getElementById('itemDate').value;
-        const details = document.getElementById('itemDetails').value;
-        const contact = document.getElementById('itemContact').value;
-        const fileInput = document.getElementById('itemImage');
-
-        const submitBtn = this.querySelector('button[type="submit"]');
-        submitBtn.disabled = true;
-        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> กำลังบันทึก...';
-
-        const saveToFirestore = async (imageBase64) => {
-            try {
-                await addDoc(collection(db, "items"), {
-                    type,
-                    name,
-                    location,
-                    date,
-                    details,
-                    contact,
-                    image: imageBase64,
-                    authorEmail: currentUser.email,
-                    createdAt: Date.now()
-                });
-
-                this.reset();
-                document.getElementById('itemDate').valueAsDate = new Date();
-                alert('ลงประกาศสำเร็จ! ข้อมูลถูกส่งขึ้นระบบกลางเรียบร้อย');
-                window.location.href = '#items-section';
-            } catch (error) {
-                console.error("Error adding document: ", error);
-                alert('เกิดข้อผิดพลาดในการบันทึก: ' + error.message);
-            } finally {
-                submitBtn.disabled = false;
-                submitBtn.innerHTML = '<i class="fas fa-paper-plane"></i> ลงประกาศทันที';
-            }
-        };
-
-        if (fileInput.files && fileInput.files[0]) {
-            const reader = new FileReader();
-            reader.onload = function(event) {
-                saveToFirestore(event.target.result);
-            };
-            reader.readAsDataURL(fileInput.files[0]);
-        } else {
-            saveToFirestore(null);
-        }
-    });
+.user-profile span {
+    font-size: 0.9rem;
+    font-weight: 500;
+    max-width: 120px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
-// Navbar Toggle สำหรับมือถือ
-const hamburger = document.getElementById('hamburger');
-if(hamburger) {
-    hamburger.addEventListener('click', () => {
-        document.getElementById('navLinks').classList.toggle('active');
-    });
+.btn-logout {
+    background: rgba(239, 68, 68, 0.2);
+    color: #EF4444;
+    border: none;
+    padding: 6px 10px;
+    border-radius: 50%;
+    cursor: pointer;
+    transition: var(--transition);
+}
+.btn-logout:hover { background: #EF4444; color: #fff; }
+
+.login-warning {
+    text-align: center;
+    padding: 30px;
+    background: rgba(239, 68, 68, 0.05);
+    border: 1px dashed rgba(239, 68, 68, 0.3);
+    border-radius: 12px;
+}
+.login-warning p { margin-bottom: 15px; color: var(--text-muted); }
+
+/* Navbar */
+.navbar {
+    position: fixed;
+    top: 0;
+    width: 100%;
+    z-index: 1000;
+    padding: 15px 0;
+    border-bottom: 1px solid var(--glass-border);
+}
+
+.nav-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.logo {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    text-decoration: none;
+    color: var(--text-main);
+    font-size: 1.2rem;
+    font-weight: 700;
+}
+
+.nav-logo-img {
+    height: 40px;
+    width: 40px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid var(--highlight-color);
+}
+
+.nav-links {
+    display: flex;
+    list-style: none;
+    gap: 25px;
+    align-items: center;
+}
+
+.nav-links a:not(.nav-btn) {
+    color: var(--text-main);
+    text-decoration: none;
+    font-weight: 400;
+    transition: var(--transition);
+}
+.nav-links a:not(.nav-btn):hover { color: var(--highlight-color); }
+
+.hamburger {
+    display: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+    color: var(--text-main);
+}
+
+/* Hero Section */
+.hero {
+    min-height: 100vh;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    align-items: center;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 100px 20px 50px;
+    gap: 50px;
+}
+
+.hero-content h1 { font-size: 3.5rem; margin-bottom: 20px; }
+.hero-content p { font-size: 1.1rem; color: var(--text-muted); margin-bottom: 30px; max-width: 500px; }
+
+.hero-search {
+    display: flex;
+    align-items: center;
+    padding: 12px 20px;
+    border-radius: 50px;
+    margin-bottom: 30px;
+    background: rgba(255,255,255,0.1);
+}
+
+.hero-search input {
+    background: transparent;
+    border: none;
+    outline: none;
+    color: var(--text-main);
+    font-size: 1.1rem;
+    width: 100%;
+    padding-left: 15px;
+}
+.hero-search input::placeholder { color: rgba(255,255,255,0.5); }
+.search-icon { color: var(--highlight-color); font-size: 1.2rem; }
+
+.hero-buttons { display: flex; gap: 15px; }
+
+.hero-image { position: relative; display: flex; justify-content: center; }
+.hero-image img {
+    width: 100%;
+    max-width: 400px;
+    border-radius: 20px;
+    z-index: 2;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+    border: 3px solid rgba(255,255,255,0.1);
+}
+
+.glow-bg {
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    width: 300px; height: 300px;
+    background: var(--highlight-color);
+    filter: blur(100px); opacity: 0.2; z-index: 1;
+}
+
+/* Items Section */
+.items-section { max-width: 1200px; margin: 0 auto; padding: 50px 20px; }
+
+.section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    margin-bottom: 40px;
+    flex-wrap: wrap;
+    gap: 20px;
+}
+.section-header h2 { font-size: 2.2rem; }
+
+.filters { display: flex; gap: 10px; background: rgba(255,255,255,0.05); padding: 5px; border-radius: 12px; }
+.filter-btn { background: transparent; color: var(--text-muted); padding: 8px 16จัดไปครับ! แต่คุณอยากได้ CSS สำหรับทำอะไรเอ่ย? (เช่น ทำปุ่มสวยๆ, จัด Layout หน้าเว็บ, ทำแอนิเมชัน หรือเมนูบาร์) 🚀
+
+ระหว่างที่รอคุณบอกรายละเอียด ผมขอเสนอ **CSS สำหรับปุ่มเรืองแสง (Glowing Button)** แบบเท่ๆ ไปลองเล่นดูก่อนครับ:
+
+```css
+.glowing-btn {
+  padding: 15px 30px;
+  font-size: 18px;
+  color: #fff;
+  background: #111;
+  border: none;
+  border-radius: 50px;
+  cursor: pointer;
+  position: relative;
+  z-index: 1;
+}
+
+.glowing-btn::before {
+  content: "";
+  position: absolute;
+  top: -2px; left: -2px; right: -2px; bottom: -2px;
+  background: linear-gradient(45deg, #ff0000, #ff7300, #fffb00, #48ff00, #00ffd5, #002bff, #7a00ff, #ff00c8, #ff0000);
+  z-index: -1;
+  border-radius: 50px;
+  background-size: 400%;
+  animation: glowing 20s linear infinite;
+  opacity: 0;
+  transition: opacity 0.3s ease-in-out;
+}
+
+.glowing-btn:hover::before {
+  opacity: 1;
+}
+
+@keyframes glowing {
+  0% { background-position: 0 0; }
+  50% { background-position: 400% 0; }
+  100% { background-position: 0 0; }
 }
