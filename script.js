@@ -1,6 +1,4 @@
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-import { getFirestore, collection, addDoc, deleteDoc, doc, query, orderBy, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
-
+// ตั้งค่า Firebase แบบ Compat (เสถียรบนทุกเบราว์เซอร์และ iPhone)
 const firebaseConfig = {
   apiKey: "AIzaSyDnR8htQoEVm9qcEpz1dxJKoZxQwxNoUcw",
   authDomain: "bodin2-lost-found.firebaseapp.com",
@@ -11,8 +9,8 @@ const firebaseConfig = {
   measurementId: "G-W0VKJ5KXBP"
 };
 
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
 
 let itemsData = [];
 let currentFilter = 'all';
@@ -69,8 +67,7 @@ function renderCards(dataToRender) {
 }
 
 function initRealtimeData() {
-    const q = query(collection(db, "items"), orderBy("createdAt", "desc"));
-    onSnapshot(q, (querySnapshot) => {
+    db.collection("items").orderBy("createdAt", "desc").onSnapshot((querySnapshot) => {
         itemsData = [];
         querySnapshot.forEach((doc) => {
             itemsData.push({ id: doc.id, ...doc.data() });
@@ -99,7 +96,7 @@ function filterData() {
 window.deleteItem = async function(id) {
     if (confirm("คุณต้องการลบประกาศนี้ใช่หรือไม่?")) {
         try {
-            await deleteDoc(doc(db, "items", id));
+            await db.collection("items").doc(id).delete();
             alert("ลบประกาศเรียบร้อยแล้ว");
         } catch (error) {
             console.error("Error deleting document: ", error);
@@ -194,8 +191,7 @@ if(postFormEl) {
 
         const saveToFirestore = async (imageBase64) => {
             try {
-                // สร้าง Promise สำหรับส่งข้อมูลเข้า Firebase
-                const addPromise = addDoc(collection(db, "items"), {
+                await db.collection("items").add({
                     type,
                     name,
                     location,
@@ -203,15 +199,8 @@ if(postFormEl) {
                     details,
                     contact,
                     image: imageBase64,
-                    createdAt: Date.now()
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
                 });
-
-                // ตั้งเวลา Timeout ไว้ 8 วินาที ถ้าเกินนี้ให้ตัดจบและแจ้งเตือนทันที
-                const timeoutPromise = new Promise((_, reject) => 
-                    setTimeout(() => reject(new Error('เชื่อมต่อเซิร์ฟเวอร์ใช้เวลานานเกินไป กรุณาตรวจสอบอินเทอร์เน็ต')), 8000)
-                );
-
-                await Promise.race([addPromise, timeoutPromise]);
 
                 this.reset();
                 document.getElementById('itemDate').valueAsDate = new Date();
