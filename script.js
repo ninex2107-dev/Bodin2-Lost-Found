@@ -1,35 +1,33 @@
-let itemsData = JSON.parse(localStorage.getItem('bodinItems')) || [
-    {
-        id: 1,
-        type: 'lost',
-        name: 'กระเป๋าสตางค์สีดำ (ม.ปลาย)',
-        location: 'โรงอาหาร 2',
-        date: '2026-06-06',
-        details: 'ข้างในมีบัตรนักเรียนและเงินสดประมาณ 200 บาท',
-        contact: 'IG: @student_b2 หรือโทร 089-123-4567',
-        image: ''
-    },
-    {
-        id: 2,
-        type: 'found',
-        name: 'ร่มพับสีฟ้า ลายการ์ตูน',
-        location: 'หน้าเสาธง',
-        date: '2026-06-05',
-        details: 'เก็บได้ช่วงเช้าหลังเคารพธงชาติ',
-        contact: 'ห้องปกครอง หรือโทร 02-111-2222',
-        image: ''
-    }
-];
+// Import Firebase SDKs
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+import { getFirestore, collection, addDoc, getDocs, query, orderBy, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
+// ใส่ค่า Config ของคุณตรงนี้
+const firebaseConfig = {
+  apiKey: "AIzaSyDnR8htQoEVm9qcEpz1dxJKoZxQwxNoUcw",
+  authDomain: "bodin2-lost-found.firebaseapp.com",
+  projectId: "bodin2-lost-found",
+  storageBucket: "bodin2-lost-found.firebasestorage.app",
+  messagingSenderId: "366439923477",
+  appId: "1:366439923477:web:28d23fabda49e02caa731c",
+  measurementId: "G-W0VKJ5KXBP"
+};
+
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+let itemsData = [];
 let currentFilter = 'all';
 
+// ================= ระบบแสดงผลหน้าเว็บ =================
 function renderCards(dataToRender) {
     const container = document.getElementById('cardsContainer');
     if(!container) return;
     container.innerHTML = '';
 
     if (dataToRender.length === 0) {
-        container.innerHTML = `<p style="grid-column: 1/-1; text-align: center; color: var(--text-muted); padding: 40px;">ยังไม่มีประกาศสิ่งของในระบบ</p>`;
+        container.innerHTML = `<p style="grid-column: 1/-1; text-align: center; color: var(--text-muted); padding: 40px;">กำลังโหลดข้อมูล หรือ ยังไม่มีประกาศในระบบ</p>`;
         return;
     }
 
@@ -70,6 +68,24 @@ function renderCards(dataToRender) {
     });
 }
 
+// ================= โหลดข้อมูลจาก Firestore แบบ Realtime =================
+function initRealtimeData() {
+    const q = query(collection(db, "items"), orderBy("createdAt", "desc"));
+    
+    // ฟังการเปลี่ยนแปลงตลอดเวลา (ถ้ามีคนอื่นโพสต์ เครื่องเราจะอัปเดตอัตโนมัติ)
+    onSnapshot(q, (querySnapshot) => {
+        itemsData = [];
+        querySnapshot.forEach((doc) => {
+            itemsData.push({ id: doc.id, ...doc.data() });
+        });
+        filterData();
+    }, (error) => {
+        console.error("Error fetching data: ", error);
+        alert("เกิดข้อผิดพลาดในการโหลดข้อมูลจากเซิร์ฟเวอร์");
+    });
+}
+
+// ================= ระบบกรองและค้นหา =================
 function filterData() {
     const searchInput = document.getElementById('searchInput');
     const searchTerm = searchInput ? searchInput.value.toLowerCase() : '';
@@ -85,7 +101,11 @@ function filterData() {
     renderCards(filtered);
 }
 
+// ================= ตั้งค่าเมื่อหน้าเว็บโหลดเสร็จ =================
 document.addEventListener('DOMContentLoaded', () => {
+    // โหลดข้อมูลจาก Database ทันทีที่เปิดเว็บ
+    initRealtimeData();
+
     const searchInput = document.getElementById('searchInput');
     if(searchInput) searchInput.addEventListener('input', filterData);
 
@@ -100,8 +120,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const dateInput = document.getElementById('itemDate');
     if(dateInput) dateInput.valueAsDate = new Date();
-
-    renderCards(itemsData);
 });
 
 window.setGlobalFilter = function(type) {
@@ -117,9 +135,10 @@ window.setFormType = function(type) {
     if(radio) radio.checked = true;
 }
 
+// ================= ระบบบันทึกประกาศลง Firestore =================
 const postFormEl = document.getElementById('postForm');
 if(postFormEl) {
-    postFormEl.addEventListener('submit', function(e) {
+    postFormEl.addEventListener('submit', async function(e) {
         e.preventDefault();
 
         const type = document.querySelector('input[name="itemType"]:checked').value;
@@ -130,36 +149,45 @@ if(postFormEl) {
         const contact = document.getElementById('itemContact').value;
         const fileInput = document.getElementById('itemImage');
 
-        const saveItem = (imageBase64) => {
-            const newItem = {
-                id: Date.now(),
-                type,
-                name,
-                location,
-                date,
-                details,
-                contact,
-                image: imageBase64
-            };
+        const submitBtn = this.querySelector('button[type="submit"]');
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> กำลังส่งข้อมูล...';
 
-            itemsData.unshift(newItem);
-            localStorage.setItem('bodinItems', JSON.stringify(itemsData));
+        const saveToFirestore = async (imageBase64) => {
+            try {
+                // บันทึกขึ้น Database
+                await addDoc(collection(db, "items"), {
+                    type,
+                    name,
+                    location,
+                    date,
+                    details,
+                    contact,
+                    image: imageBase64,
+                    createdAt: Date.now()
+                });
 
-            this.reset();
-            document.getElementById('itemDate').valueAsDate = new Date();
-            alert('ลงประกาศสำเร็จ!');
-            filterData();
-            window.location.href = '#items-section';
+                this.reset();
+                document.getElementById('itemDate').valueAsDate = new Date();
+                alert('ลงประกาศสำเร็จ! ทุกคนจะเห็นประกาศของคุณแล้ว');
+                window.location.href = '#items-section';
+            } catch (error) {
+                console.error("Error adding document: ", error);
+                alert('เกิดข้อผิดพลาดในการบันทึก: ' + error.message);
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<i class="fas fa-paper-plane"></i> ลงประกาศทันที';
+            }
         };
 
         if (fileInput.files && fileInput.files[0]) {
             const reader = new FileReader();
             reader.onload = function(event) {
-                saveItem(event.target.result);
+                saveToFirestore(event.target.result);
             };
             reader.readAsDataURL(fileInput.files[0]);
         } else {
-            saveItem(null);
+            saveToFirestore(null);
         }
     });
 }
