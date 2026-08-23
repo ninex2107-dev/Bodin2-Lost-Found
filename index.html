@@ -5,67 +5,134 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>BODIN 2 Lost & Found</title>
     <link rel="stylesheet" href="style.css">
-    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
 
-    <nav class="navbar">
+    <!-- Navbar -->
+    <nav class="navbar glass">
         <div class="nav-container">
             <a href="#" class="logo">
-                <img src="https://upload.wikimedia.org/wikipedia/th/thumb/f/f6/Bodin_decha_logo.png/600px-Bodin_decha_logo.png" alt="Logo">
+                <img src="logo.jpeg" alt="Bodin 2 Logo" class="nav-logo-img" onerror="this.src='https://placehold.co/100x100/1a365d/ffffff?text=B2'">
                 <span>BODIN 2 <span class="highlight">Lost & Found</span></span>
             </a>
-            <div class="hamburger" id="hamburger"><i class="fas fa-bars"></i></div>
             <ul class="nav-links" id="navLinks">
                 <li><a href="#home">หน้าแรก</a></li>
-                <li><a href="#items-section">ของหาย</a></li>
-                <li><a href="#items-section">ของที่พบ</a></li>
+                <li><a href="#items-section" onclick="setGlobalFilter('lost')">ของหาย</a></li>
+                <li><a href="#items-section" onclick="setGlobalFilter('found')">ของที่พบ</a></li>
                 <li><a href="#post-section">ลงประกาศ</a></li>
             </ul>
+            <div class="hamburger" id="hamburger">
+                <i class="fas fa-bars"></i>
+            </div>
         </div>
     </nav>
 
+    <!-- Hero Section -->
     <header id="home" class="hero">
-        <div class="hero-content">
-            <h1>ตามหาของที่หาย <br><span class="highlight">ได้ที่นี่</span></h1>
-            <p>ระบบแจ้งและค้นหาสิ่งของสูญหายภายในโรงเรียนบดินทรเดชา (สิงห์ สิงหเสนี) ๒</p>
-            <div class="hero-search">
-                <input type="text" id="searchInput" placeholder="ค้นหาชื่อสิ่งของ...">
+        <div class="hero-content fade-in-up">
+            <h1>ของหาย <br><span class="highlight">ตามหาได้ที่นี่</span></h1>
+            <p>ระบบแจ้งและค้นหาสิ่งของสูญหายภายในโรงเรียนบดินทรเดชา (สิงห์ สิงหเสนี) ๒ รวดเร็ว ทันใจ และใช้งานง่าย</p>
+            
+            <div class="hero-search glass">
+                <i class="fas fa-search search-icon"></i>
+                <input type="text" id="searchInput" placeholder="ค้นหาชื่อสิ่งของ, สถานที่ หรือรายละเอียด...">
             </div>
+
             <div class="hero-buttons">
-                <a href="#post-section" class="btn-primary">ลงประกาศ</a>
+                <a href="#post-section" class="btn-primary" onclick="setFormType('lost')"><i class="fas fa-bullhorn"></i> แจ้งของหาย</a>
+                <a href="#post-section" class="btn-secondary" onclick="setFormType('found')"><i class="fas fa-box-open"></i> แจ้งของที่พบ</a>
             </div>
+        </div>
+        <div class="hero-image bounce">
+            <img src="logo.jpeg" alt="BODIN 2 School Logo" onerror="this.src='https://placehold.co/400x400/1a365d/ffffff?text=BODIN+2'">
+            <div class="glow-bg"></div>
         </div>
     </header>
 
+    <!-- Items Section -->
     <section id="items-section" class="items-section">
-        <div class="filters">
-            <button class="filter-btn active" data-filter="all">ทั้งหมด</button>
-            <button class="filter-btn" data-filter="lost">ของหาย</button>
-            <button class="filter-btn" data-filter="found">ของที่พบ</button>
+        <div class="section-header">
+            <h2>รายการ <span class="highlight">ประกาศ</span></h2>
+            <div class="filters">
+                <button class="filter-btn active" data-filter="all">ทั้งหมด</button>
+                <button class="filter-btn" data-filter="lost">ของหาย</button>
+                <button class="filter-btn" data-filter="found">ของที่พบ</button>
+            </div>
         </div>
-        <div class="cards-grid" id="cardsContainer"></div>
+
+        <div class="cards-grid" id="cardsContainer">
+            <!-- Cards will be loaded dynamically -->
+        </div>
     </section>
 
+    <!-- Post Form Section -->
     <section id="post-section" class="post-section">
-        <div class="form-container">
-            <h2>ลงประกาศสิ่งของ</h2>
+        <div class="form-container glass fade-in-up">
+            <h2><i class="fas fa-edit"></i> ลงประกาศ<span class="highlight">สิ่งของ</span></h2>
             <form id="postForm">
-                <div class="radio-group">
-                    <label><input type="radio" name="itemType" value="lost" checked> ของหาย</label>
-                    <label><input type="radio" name="itemType" value="found"> ของที่พบ</label>
+                <div class="form-group">
+                    <label>ประเภทการประกาศ *</label>
+                    <div class="radio-group">
+                        <label class="radio-card">
+                            <input type="radio" name="itemType" value="lost" required checked>
+                            <span class="radio-content"><i class="fas fa-bullhorn"></i> ของหาย</span>
+                        </label>
+                        <label class="radio-card">
+                            <input type="radio" name="itemType" value="found" required>
+                            <span class="radio-content"><i class="fas fa-box-open"></i> ของที่พบ</span>
+                        </label>
+                    </div>
                 </div>
-                <input type="text" id="itemName" placeholder="ชื่อสิ่งของ *" required>
-                <input type="text" id="itemLocation" placeholder="สถานที่ *" required>
-                <input type="date" id="itemDate" required>
-                <textarea id="itemDetails" placeholder="รายละเอียดเพิ่มเติม"></textarea>
-                <input type="text" id="itemContact" placeholder="ช่องทางติดต่อ *" required>
-                <button type="submit" class="btn-primary w-100">ส่งประกาศ</button>
+                
+                <div class="form-group">
+                    <label for="itemName">ชื่อสิ่งของ *</label>
+                    <input type="text" id="itemName" placeholder="เช่น กระเป๋าสตางค์, บัตรนักเรียน, กุญแจ" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="itemImage">รูปภาพสิ่งของ (ถ้ามี)</label>
+                    <input type="file" id="itemImage" accept="image/*">
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="itemLocation">สถานที่ *</label>
+                        <input type="text" id="itemLocation" placeholder="เช่น โรงอาหาร, อาคาร 3" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="itemDate">วันที่ (หาย/พบ) *</label>
+                        <input type="date" id="itemDate" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="itemDetails">รายละเอียดเพิ่มเติม</label>
+                    <textarea id="itemDetails" rows="3" placeholder="ระบุลักษณะเด่น, สี, ยี่ห้อ ฯลฯ"></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="itemContact">ช่องทางติดต่อ *</label>
+                    <input type="text" id="itemContact" placeholder="เบอร์โทรศัพท์, IG, Facebook หรือห้องเรียน" required>
+                </div>
+
+                <button type="submit" class="btn-primary w-100 btn-large"><i class="fas fa-paper-plane"></i> ลงประกาศทันที</button>
             </form>
         </div>
     </section>
 
+    <!-- Footer -->
+    <footer>
+        <div class="footer-content">
+            <img src="logo.jpeg" alt="BODIN 2" class="footer-logo" onerror="this.src='https://placehold.co/100x100/1a365d/ffffff?text=B2'">
+            <h3>BODIN 2 <span class="highlight">Lost & Found</span></h3>
+            <p>เว็บไซต์ระบบกลางสำหรับแจ้งและค้นหาสิ่งของสูญหายภายในโรงเรียน</p>
+            <p class="copyright">© 2026 Bodindecha (Sing Singhaseni) 2.</p>
+        </div>
+    </footer>
+
+    <!-- Main Script -->
     <script src="script.js"></script>
 </body>
 </html>
