@@ -1,8 +1,6 @@
-// Import Firebase SDKs
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-import { getFirestore, collection, addDoc, getDocs, query, orderBy, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+import { getFirestore, collection, addDoc, deleteDoc, doc, query, orderBy, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-// ใส่ค่า Config ของคุณตรงนี้
 const firebaseConfig = {
   apiKey: "AIzaSyDnR8htQoEVm9qcEpz1dxJKoZxQwxNoUcw",
   authDomain: "bodin2-lost-found.firebaseapp.com",
@@ -13,21 +11,19 @@ const firebaseConfig = {
   measurementId: "G-W0VKJ5KXBP"
 };
 
-// Initialize Firebase
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
 let itemsData = [];
 let currentFilter = 'all';
 
-// ================= ระบบแสดงผลหน้าเว็บ =================
 function renderCards(dataToRender) {
     const container = document.getElementById('cardsContainer');
     if(!container) return;
     container.innerHTML = '';
 
     if (dataToRender.length === 0) {
-        container.innerHTML = `<p style="grid-column: 1/-1; text-align: center; color: var(--text-muted); padding: 40px;">กำลังโหลดข้อมูล หรือ ยังไม่มีประกาศในระบบ</p>`;
+        container.innerHTML = `<p style="grid-column: 1/-1; text-align: center; color: var(--text-muted); padding: 40px;">ยังไม่มีประกาศสิ่งของในระบบ</p>`;
         return;
     }
 
@@ -61,6 +57,10 @@ function renderCards(dataToRender) {
                     <div class="card-contact">
                         <i class="fas fa-address-book"></i> ติดต่อ: ${item.contact}
                     </div>
+
+                    <button class="delete-btn" onclick="deleteItem('${item.id}')">
+                        <i class="fas fa-trash-alt"></i> ลบประกาศนี้
+                    </button>
                 </div>
             </div>
         `;
@@ -68,11 +68,8 @@ function renderCards(dataToRender) {
     });
 }
 
-// ================= โหลดข้อมูลจาก Firestore แบบ Realtime =================
 function initRealtimeData() {
     const q = query(collection(db, "items"), orderBy("createdAt", "desc"));
-    
-    // ฟังการเปลี่ยนแปลงตลอดเวลา (ถ้ามีคนอื่นโพสต์ เครื่องเราจะอัปเดตอัตโนมัติ)
     onSnapshot(q, (querySnapshot) => {
         itemsData = [];
         querySnapshot.forEach((doc) => {
@@ -81,11 +78,9 @@ function initRealtimeData() {
         filterData();
     }, (error) => {
         console.error("Error fetching data: ", error);
-        alert("เกิดข้อผิดพลาดในการโหลดข้อมูลจากเซิร์ฟเวอร์");
     });
 }
 
-// ================= ระบบกรองและค้นหา =================
 function filterData() {
     const searchInput = document.getElementById('searchInput');
     const searchTerm = searchInput ? searchInput.value.toLowerCase() : '';
@@ -101,9 +96,20 @@ function filterData() {
     renderCards(filtered);
 }
 
-// ================= ตั้งค่าเมื่อหน้าเว็บโหลดเสร็จ =================
+// ฟังก์ชันลบโพสต์ออกจาก Firebase
+window.deleteItem = async function(id) {
+    if (confirm("คุณต้องการลบประกาศนี้ใช่หรือไม่?")) {
+        try {
+            await deleteDoc(doc(db, "items", id));
+            alert("ลบประกาศเรียบร้อยแล้ว");
+        } catch (error) {
+            console.error("Error deleting document: ", error);
+            alert("เกิดข้อผิดพลาดในการลบ: " + error.message);
+        }
+    }
+}
+
 document.addEventListener('DOMContentLoaded', () => {
-    // โหลดข้อมูลจาก Database ทันทีที่เปิดเว็บ
     initRealtimeData();
 
     const searchInput = document.getElementById('searchInput');
@@ -135,7 +141,6 @@ window.setFormType = function(type) {
     if(radio) radio.checked = true;
 }
 
-// ================= ระบบบันทึกประกาศลง Firestore =================
 const postFormEl = document.getElementById('postForm');
 if(postFormEl) {
     postFormEl.addEventListener('submit', async function(e) {
@@ -155,7 +160,6 @@ if(postFormEl) {
 
         const saveToFirestore = async (imageBase64) => {
             try {
-                // บันทึกขึ้น Database
                 await addDoc(collection(db, "items"), {
                     type,
                     name,
@@ -169,11 +173,11 @@ if(postFormEl) {
 
                 this.reset();
                 document.getElementById('itemDate').valueAsDate = new Date();
-                alert('ลงประกาศสำเร็จ! ทุกคนจะเห็นประกาศของคุณแล้ว');
+                alert('ลงประกาศสำเร็จ!');
                 window.location.href = '#items-section';
             } catch (error) {
                 console.error("Error adding document: ", error);
-                alert('เกิดข้อผิดพลาดในการบันทึก: ' + error.message);
+                alert('เกิดข้อผิดพลาด: ' + error.message);
             } finally {
                 submitBtn.disabled = false;
                 submitBtn.innerHTML = '<i class="fas fa-paper-plane"></i> ลงประกาศทันที';
@@ -192,7 +196,6 @@ if(postFormEl) {
     });
 }
 
-// เปิด-ปิด เมนูบนมือถือ
 const hamburger = document.getElementById('hamburger');
 if(hamburger) {
     hamburger.addEventListener('click', () => {
