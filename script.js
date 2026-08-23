@@ -1,4 +1,4 @@
-// ตั้งค่า Firebase แบบ Compat (เสถียรบนทุกเบราว์เซอร์และ iPhone)
+// ตั้งค่า Firebase แบบ Compat
 const firebaseConfig = {
   apiKey: "AIzaSyDnR8htQoEVm9qcEpz1dxJKoZxQwxNoUcw",
   authDomain: "bodin2-lost-found.firebaseapp.com",
@@ -14,6 +14,15 @@ const db = firebase.firestore();
 
 let itemsData = [];
 let currentFilter = 'all';
+
+// รายการคำหยาบที่ต้องการแบน (สามารถพิมพ์เพิ่มใน [ ] นี้ได้เลย)
+const badWordsList = ["เหี้ย", "สัส", "ควย", "เย็ด", "หี", "แตด", "พ่อง", "แม่ง", "เสือก", "ควาย", "fuck", "shit", "อีเวร"];
+
+// ฟังก์ชันตรวจคำหยาบ
+function containsBadWords(text) {
+    if (!text) return false;
+    return badWordsList.some(word => text.includes(word));
+}
 
 function renderCards(dataToRender) {
     const container = document.getElementById('cardsContainer');
@@ -184,6 +193,12 @@ if(postFormEl) {
         const details = document.getElementById('itemDetails').value;
         const contact = document.getElementById('itemContact').value;
         const fileInput = document.getElementById('itemImage');
+
+        // ระบบกรองคำหยาบก่อนส่งข้อมูล
+        if (containsBadWords(name) || containsBadWords(details)) {
+            alert('🚫 ขออภัยครับ! ระบบตรวจพบคำไม่สุภาพ กรุณาแก้ไขข้อความก่อนลงประกาศครับ');
+            return; // หยุดการทำงาน ไม่ส่งข้อมูลขึ้น Firebase
+        }
 
         const submitBtn = this.querySelector('button[type="submit"]');
         submitBtn.disabled = true;
