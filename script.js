@@ -96,7 +96,6 @@ function filterData() {
     renderCards(filtered);
 }
 
-// ฟังก์ชันลบโพสต์ออกจาก Firebase
 window.deleteItem = async function(id) {
     if (confirm("คุณต้องการลบประกาศนี้ใช่หรือไม่?")) {
         try {
@@ -141,6 +140,41 @@ window.setFormType = function(type) {
     if(radio) radio.checked = true;
 }
 
+function compressImage(file, callback) {
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = function (event) {
+        const img = new Image();
+        img.src = event.target.result;
+        img.onload = function () {
+            const canvas = document.createElement('canvas');
+            const MAX_WIDTH = 500;
+            const MAX_HEIGHT = 500;
+            let width = img.width;
+            let height = img.height;
+
+            if (width > height) {
+                if (width > MAX_WIDTH) {
+                    height *= MAX_WIDTH / width;
+                    width = MAX_WIDTH;
+                }
+            } else {
+                if (height > MAX_HEIGHT) {
+                    width *= MAX_HEIGHT / height;
+                    height = MAX_HEIGHT;
+                }
+            }
+
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, width, height);
+            const dataUrl = canvas.toDataURL('image/jpeg', 0.6);
+            callback(dataUrl);
+        }
+    }
+}
+
 const postFormEl = document.getElementById('postForm');
 if(postFormEl) {
     postFormEl.addEventListener('submit', async function(e) {
@@ -160,7 +194,8 @@ if(postFormEl) {
 
         const saveToFirestore = async (imageBase64) => {
             try {
-                await addDoc(collection(db, "items"), {
+                // สร้าง Promise สำหรับส่งข้อมูลเข้า Firebase
+                const addPromise = addDoc(collection(db, "items"), {
                     type,
                     name,
                     location,
@@ -170,6 +205,13 @@ if(postFormEl) {
                     image: imageBase64,
                     createdAt: Date.now()
                 });
+
+                // ตั้งเวลา Timeout ไว้ 8 วินาที ถ้าเกินนี้ให้ตัดจบและแจ้งเตือนทันที
+                const timeoutPromise = new Promise((_, reject) => 
+                    setTimeout(() => reject(new Error('เชื่อมต่อเซิร์ฟเวอร์ใช้เวลานานเกินไป กรุณาตรวจสอบอินเทอร์เน็ต')), 8000)
+                );
+
+                await Promise.race([addPromise, timeoutPromise]);
 
                 this.reset();
                 document.getElementById('itemDate').valueAsDate = new Date();
@@ -185,11 +227,9 @@ if(postFormEl) {
         };
 
         if (fileInput.files && fileInput.files[0]) {
-            const reader = new FileReader();
-            reader.onload = function(event) {
-                saveToFirestore(event.target.result);
-            };
-            reader.readAsDataURL(fileInput.files[0]);
+            compressImage(fileInput.files[0], (compressedDataUrl) => {
+                saveToFirestore(compressedDataUrl);
+            });
         } else {
             saveToFirestore(null);
         }
