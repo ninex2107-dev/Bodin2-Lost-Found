@@ -15,10 +15,9 @@ const db = firebase.firestore();
 let itemsData = [];
 let currentFilter = 'all';
 
-// รายการคำหยาบที่ต้องการแบน (สามารถพิมพ์เพิ่มใน [ ] นี้ได้เลย)
-const badWordsList = ["เหี้ย", "สัส", "ควย", "เย็ด", "หี", "แตด", "พ่อง", "แม่ง", "เสือก", "ควาย", "fuck", "shit", "อีเวร, "", เย็ด"];
+// รายการคำหยาบที่ต้องการแบน
+const badWordsList = ["เหี้ย", "สัส", "ควย", "เย็ด", "หี", "แตด", "พ่อง", "แม่ง", "เสือก", "ควาย", "fuck", "shit", "อีเวร"];
 
-// ฟังก์ชันตรวจคำหยาบ
 function containsBadWords(text) {
     if (!text) return false;
     return badWordsList.some(word => text.includes(word));
@@ -114,38 +113,6 @@ window.deleteItem = async function(id) {
     }
 }
 
-document.addEventListener('DOMContentLoaded', () => {
-    initRealtimeData();
-
-    const searchInput = document.getElementById('searchInput');
-    if(searchInput) searchInput.addEventListener('input', filterData);
-
-    document.querySelectorAll('.filter-btn').forEach(btn => {
-        btn.addEventListener('click', (e) => {
-            document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-            e.target.classList.add('active');
-            currentFilter = e.target.getAttribute('data-filter');
-            filterData();
-        });
-    });
-
-    const dateInput = document.getElementById('itemDate');
-    if(dateInput) dateInput.valueAsDate = new Date();
-});
-
-window.setGlobalFilter = function(type) {
-    document.querySelectorAll('.filter-btn').forEach(b => {
-        if (b.getAttribute('data-filter') === type) {
-            b.click();
-        }
-    });
-}
-
-window.setFormType = function(type) {
-    const radio = document.querySelector(`input[name="itemType"][value="${type}"]`);
-    if(radio) radio.checked = true;
-}
-
 function compressImage(file, callback) {
     const reader = new FileReader();
     reader.readAsDataURL(file);
@@ -181,63 +148,95 @@ function compressImage(file, callback) {
     }
 }
 
-const postFormEl = document.getElementById('postForm');
-if(postFormEl) {
-    postFormEl.addEventListener('submit', async function(e) {
-        e.preventDefault();
+document.addEventListener('DOMContentLoaded', () => {
+    initRealtimeData();
 
-        const type = document.querySelector('input[name="itemType"]:checked').value;
-        const name = document.getElementById('itemName').value;
-        const location = document.getElementById('itemLocation').value;
-        const date = document.getElementById('itemDate').value;
-        const details = document.getElementById('itemDetails').value;
-        const contact = document.getElementById('itemContact').value;
-        const fileInput = document.getElementById('itemImage');
+    const searchInput = document.getElementById('searchInput');
+    if(searchInput) searchInput.addEventListener('input', filterData);
 
-        // ระบบกรองคำหยาบก่อนส่งข้อมูล
-        if (containsBadWords(name) || containsBadWords(details)) {
-            alert('🚫 ขออภัยครับ! ระบบตรวจพบคำไม่สุภาพ กรุณาแก้ไขข้อความก่อนลงประกาศครับ');
-            return; // หยุดการทำงาน ไม่ส่งข้อมูลขึ้น Firebase
-        }
+    document.querySelectorAll('.filter-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+            e.target.classList.add('active');
+            currentFilter = e.target.getAttribute('data-filter');
+            filterData();
+        });
+    });
 
-        const submitBtn = this.querySelector('button[type="submit"]');
-        submitBtn.disabled = true;
-        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> กำลังส่งข้อมูล...';
+    const dateInput = document.getElementById('itemDate');
+    if(dateInput) dateInput.valueAsDate = new Date();
 
-        const saveToFirestore = async (imageBase64) => {
-            try {
-                await db.collection("items").add({
-                    type,
-                    name,
-                    location,
-                    date,
-                    details,
-                    contact,
-                    image: imageBase64,
-                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
-                });
+    // ดึงฟอร์มมาไว้ข้างในนี้ ทำงานชัวร์ 100%
+    const postFormEl = document.getElementById('postForm');
+    if(postFormEl) {
+        postFormEl.addEventListener('submit', async function(e) {
+            e.preventDefault();
 
-                this.reset();
-                document.getElementById('itemDate').valueAsDate = new Date();
-                alert('ลงประกาศสำเร็จ!');
-                window.location.href = '#items-section';
-            } catch (error) {
-                console.error("Error adding document: ", error);
-                alert('เกิดข้อผิดพลาด: ' + error.message);
-            } finally {
-                submitBtn.disabled = false;
-                submitBtn.innerHTML = '<i class="fas fa-paper-plane"></i> ลงประกาศทันที';
+            const type = document.querySelector('input[name="itemType"]:checked').value;
+            const name = document.getElementById('itemName').value;
+            const location = document.getElementById('itemLocation').value;
+            const date = document.getElementById('itemDate').value;
+            const details = document.getElementById('itemDetails').value;
+            const contact = document.getElementById('itemContact').value;
+            const fileInput = document.getElementById('itemImage');
+
+            if (containsBadWords(name) || containsBadWords(details)) {
+                alert('🚫 ขออภัยครับ! ระบบตรวจพบคำไม่สุภาพ กรุณาแก้ไขข้อความก่อนลงประกาศครับ');
+                return;
             }
-        };
 
-        if (fileInput.files && fileInput.files[0]) {
-            compressImage(fileInput.files[0], (compressedDataUrl) => {
-                saveToFirestore(compressedDataUrl);
-            });
-        } else {
-            saveToFirestore(null);
+            const submitBtn = this.querySelector('button[type="submit"]');
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> กำลังส่งข้อมูล...';
+
+            const saveToFirestore = async (imageBase64) => {
+                try {
+                    await db.collection("items").add({
+                        type,
+                        name,
+                        location,
+                        date,
+                        details,
+                        contact,
+                        image: imageBase64,
+                        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                    });
+
+                    this.reset();
+                    document.getElementById('itemDate').valueAsDate = new Date();
+                    alert('ลงประกาศสำเร็จ!');
+                    window.location.href = '#items-section';
+                } catch (error) {
+                    console.error("Error adding document: ", error);
+                    alert('เกิดข้อผิดพลาด: ' + error.message);
+                } finally {
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = '<i class="fas fa-paper-plane"></i> ลงประกาศทันที';
+                }
+            };
+
+            if (fileInput.files && fileInput.files[0]) {
+                compressImage(fileInput.files[0], (compressedDataUrl) => {
+                    saveToFirestore(compressedDataUrl);
+                });
+            } else {
+                saveToFirestore(null);
+            }
+        });
+    }
+});
+
+window.setGlobalFilter = function(type) {
+    document.querySelectorAll('.filter-btn').forEach(b => {
+        if (b.getAttribute('data-filter') === type) {
+            b.click();
         }
     });
+}
+
+window.setFormType = function(type) {
+    const radio = document.querySelector(`input[name="itemType"][value="${type}"]`);
+    if(radio) radio.checked = true;
 }
 
 const hamburger = document.getElementById('hamburger');
