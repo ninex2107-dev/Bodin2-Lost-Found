@@ -124,7 +124,10 @@ button, .btn-primary, .btn-secondary {
 label { display: block; margin-bottom: 6px; color: var(--text-muted); font-size: 0.9rem; }
 
 input[type="text"], input[type="date"], textarea {
-    width: 100%; padding: 10px 14px; border-radius: 8px;
+    width: 100%; 
+    max-width: 100%;
+    box-sizing: border-box;
+    padding: 10px 14px; border-radius: 8px;
     border: 1px solid var(--glass-border); background: rgba(0,0,0,0.2); color: var(--text-main); font-size: 0.95rem;
     height: 45px; min-height: 45px;
 }
