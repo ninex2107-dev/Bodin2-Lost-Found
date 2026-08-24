@@ -103,7 +103,7 @@ function filterData() {
 
 // 📌 ระบบถามรหัสผ่าน 1234 ก่อนลบประกาศ
 window.deleteItem = async function(id) {
-    const pin = prompt("🔒 กรุณาใส่รหัสผ่าน:");
+    const pin = prompt("🔒 กรุณาใส่รหัสผ่านเพื่อยืนยันการลบประกาศ:");
     
     // ตรวจสอบรหัสผ่าน
     if (pin === "1234") {
@@ -117,7 +117,7 @@ window.deleteItem = async function(id) {
             }
         }
     } else if (pin !== null) { // กรณีใส่ผิด (และไม่ได้กด Cancel)
-        alert("❌ รหัสผ่านไม่ถูกต้อง! ");
+        alert("❌ รหัสผ่านไม่ถูกต้อง! ไม่สามารถลบประกาศได้");
     }
 }
 
@@ -180,11 +180,11 @@ document.addEventListener('DOMContentLoaded', () => {
             e.preventDefault();
 
             // 📌 ระบบถามรหัสผ่าน 1234 ก่อนลงประกาศ
-            const pin = prompt("🔒 กรุณาใส่รหัสผ่าน:");
+            const pin = prompt("🔒 กรุณาใส่รหัสผ่านเพื่ออนุญาตให้ลงประกาศ:");
             
             if (pin !== "1234") {
                 if (pin !== null) { // กรณีใส่ผิด (และไม่ได้กด Cancel)
-                    alert("❌ รหัสผ่านไม่ถูกต้อง! ");
+                    alert("❌ รหัสผ่านไม่ถูกต้อง! ไม่สามารถลงประกาศได้");
                 }
                 return; // หยุดการทำงานทันที ไม่ส่งข้อมูลขึ้นฐานข้อมูล
             }
