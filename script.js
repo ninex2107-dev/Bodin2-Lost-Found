@@ -101,15 +101,23 @@ function filterData() {
     renderCards(filtered);
 }
 
+// 📌 ระบบถามรหัสผ่าน 1234 ก่อนลบประกาศ
 window.deleteItem = async function(id) {
-    if (confirm("คุณต้องการลบประกาศนี้ใช่หรือไม่?")) {
-        try {
-            await db.collection("items").doc(id).delete();
-            alert("ลบประกาศเรียบร้อยแล้ว");
-        } catch (error) {
-            console.error("Error deleting document: ", error);
-            alert("เกิดข้อผิดพลาดในการลบ: " + error.message);
+    const pin = prompt("🔒 กรุณาใส่รหัสผ่านเพื่อยืนยันการลบประกาศ:");
+    
+    // ตรวจสอบรหัสผ่าน
+    if (pin === "1234") {
+        if (confirm("รหัสถูกต้อง! คุณต้องการลบประกาศนี้ใช่หรือไม่?")) {
+            try {
+                await db.collection("items").doc(id).delete();
+                alert("ลบประกาศเรียบร้อยแล้ว");
+            } catch (error) {
+                console.error("Error deleting document: ", error);
+                alert("เกิดข้อผิดพลาดในการลบ: " + error.message);
+            }
         }
+    } else if (pin !== null) { // กรณีใส่ผิด (และไม่ได้กด Cancel)
+        alert("❌ รหัสผ่านไม่ถูกต้อง! ไม่สามารถลบประกาศได้");
     }
 }
 
@@ -166,11 +174,20 @@ document.addEventListener('DOMContentLoaded', () => {
     const dateInput = document.getElementById('itemDate');
     if(dateInput) dateInput.valueAsDate = new Date();
 
-    // ดึงฟอร์มมาไว้ข้างในนี้ ทำงานชัวร์ 100%
     const postFormEl = document.getElementById('postForm');
     if(postFormEl) {
         postFormEl.addEventListener('submit', async function(e) {
             e.preventDefault();
+
+            // 📌 ระบบถามรหัสผ่าน 1234 ก่อนลงประกาศ
+            const pin = prompt("🔒 กรุณาใส่รหัสผ่านเพื่ออนุญาตให้ลงประกาศ:");
+            
+            if (pin !== "1234") {
+                if (pin !== null) { // กรณีใส่ผิด (และไม่ได้กด Cancel)
+                    alert("❌ รหัสผ่านไม่ถูกต้อง! ไม่สามารถลงประกาศได้");
+                }
+                return; // หยุดการทำงานทันที ไม่ส่งข้อมูลขึ้นฐานข้อมูล
+            }
 
             const type = document.querySelector('input[name="itemType"]:checked').value;
             const name = document.getElementById('itemName').value;
