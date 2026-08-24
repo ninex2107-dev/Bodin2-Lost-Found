@@ -123,13 +123,22 @@ button, .btn-primary, .btn-secondary {
 .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
 label { display: block; margin-bottom: 6px; color: var(--text-muted); font-size: 0.9rem; }
 
+/* 📌 แก้ไขช่องกรอกข้อมูล บังคับลบสไตล์ของ iOS */
 input[type="text"], input[type="date"], textarea {
-    width: 100%; 
-    max-width: 100%;
-    box-sizing: border-box;
-    padding: 10px 14px; border-radius: 8px;
-    border: 1px solid var(--glass-border); background: rgba(0,0,0,0.2); color: var(--text-main); font-size: 0.95rem;
-    height: 45px; min-height: 45px;
+    width: 100% !important; 
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+    -webkit-appearance: none; 
+    appearance: none;
+    padding: 10px 14px; 
+    border-radius: 8px;
+    border: 1px solid var(--glass-border); 
+    background: rgba(0,0,0,0.2); 
+    color: var(--text-main); 
+    font-size: 0.95rem;
+    height: 45px; 
+    min-height: 45px;
+    display: block;
 }
 textarea { height: auto; min-height: 100px; }
 input:focus, textarea:focus { outline: none; border-color: var(--highlight-color); background: rgba(0,0,0,0.4); }
@@ -167,5 +176,5 @@ footer { background: var(--primary-light); border-top: 1px solid var(--glass-bor
     .hero-search { max-width: 100%; margin: 0 auto 25px; }
     .hero-buttons { justify-content: center; }
     .hero-image { order: -1; }
-    .form-row { grid-template-columns: 1fr; }
+    .form-row { grid-template-columns: 1fr; } /* 📌 ให้คอลัมน์บนมือถือเรียงแถวเดี่ยว */
 }
