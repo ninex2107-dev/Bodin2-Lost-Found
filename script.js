@@ -105,7 +105,6 @@ function filterData() {
 window.deleteItem = async function(id) {
     const pin = prompt("🔒 กรุณาใส่รหัสผ่านเพื่อยืนยันการลบประกาศ:");
     
-    // ตรวจสอบรหัสผ่าน
     if (pin === "1234") {
         if (confirm("รหัสถูกต้อง! คุณต้องการลบประกาศนี้ใช่หรือไม่?")) {
             try {
@@ -116,7 +115,7 @@ window.deleteItem = async function(id) {
                 alert("เกิดข้อผิดพลาดในการลบ: " + error.message);
             }
         }
-    } else if (pin !== null) { // กรณีใส่ผิด (และไม่ได้กด Cancel)
+    } else if (pin !== null) { 
         alert("❌ รหัสผ่านไม่ถูกต้อง! ไม่สามารถลบประกาศได้");
     }
 }
@@ -183,10 +182,10 @@ document.addEventListener('DOMContentLoaded', () => {
             const pin = prompt("🔒 กรุณาใส่รหัสผ่านเพื่ออนุญาตให้ลงประกาศ:");
             
             if (pin !== "1234") {
-                if (pin !== null) { // กรณีใส่ผิด (และไม่ได้กด Cancel)
+                if (pin !== null) { 
                     alert("❌ รหัสผ่านไม่ถูกต้อง! ไม่สามารถลงประกาศได้");
                 }
-                return; // หยุดการทำงานทันที ไม่ส่งข้อมูลขึ้นฐานข้อมูล
+                return; 
             }
 
             const type = document.querySelector('input[name="itemType"]:checked').value;
