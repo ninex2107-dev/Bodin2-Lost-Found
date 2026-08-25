@@ -101,7 +101,7 @@ function filterData() {
     renderCards(filtered);
 }
 
-// 📌 ระบบถามรหัสผ่าน 1234 ก่อนลบประกาศ
+// ระบบถามรหัสผ่าน 1234 ก่อนลบประกาศ
 window.deleteItem = async function(id) {
     const pin = prompt("🔒 กรุณาใส่รหัสผ่านเพื่อยืนยันการลบประกาศ:");
     
@@ -178,7 +178,7 @@ document.addEventListener('DOMContentLoaded', () => {
         postFormEl.addEventListener('submit', async function(e) {
             e.preventDefault();
 
-            // 📌 ระบบถามรหัสผ่าน 1234 ก่อนลงประกาศ
+            // ระบบถามรหัสผ่าน 1234 ก่อนลงประกาศ
             const pin = prompt("🔒 กรุณาใส่รหัสผ่านเพื่ออนุญาตให้ลงประกาศ:");
             
             if (pin !== "1234") {
@@ -221,7 +221,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     this.reset();
                     document.getElementById('itemDate').valueAsDate = new Date();
                     alert('ลงประกาศสำเร็จ!');
-                    window.location.href = '#items-section';
+                    // 📌 ลบคำสั่งเด้งไป #items-section ออกแล้ว ลิงก์จะไม่มียอด # ต่อท้ายกวนใจอีกต่อไป
                 } catch (error) {
                     console.error("Error adding document: ", error);
                     alert('เกิดข้อผิดพลาด: ' + error.message);
