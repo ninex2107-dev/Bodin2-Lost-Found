@@ -16,7 +16,7 @@ let itemsData = [];
 let currentFilter = 'all';
 
 // รายการคำหยาบที่ต้องการแบน
-const badWordsList = ["เหี้ย", "สัส", "ควย", "เย็ด", "หี", "แตด", "พ่อง", "แม่ง", "เสือก", "ควาย", "fuck", "shit", "อีเวร"];
+const badWordsList = ["เหี้ย", "สัส", "ควย", "เย็ด", "หี", "แตদ", "พ่อง", "แม่ง", "เสือก", "ควาย", "fuck", "shit", "อีเวร"];
 
 function containsBadWords(text) {
     if (!text) return false;
@@ -101,7 +101,7 @@ function filterData() {
     renderCards(filtered);
 }
 
-// ระบบถามรหัสผ่าน 1234 ก่อนลบประกาศ
+// ระบบถามรหัสผ่าน 1234 ก่อนลบประกาศ (ผูก Global ชัวร์ 100%)
 window.deleteItem = async function(id) {
     const pin = prompt("🔒 กรุณาใส่รหัสผ่านเพื่อยืนยันการลบประกาศ:");
     
@@ -221,7 +221,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     this.reset();
                     document.getElementById('itemDate').valueAsDate = new Date();
                     alert('ลงประกาศสำเร็จ!');
-                    // 📌 ลบคำสั่งเด้งไป #items-section ออกแล้ว ลิงก์จะไม่มียอด # ต่อท้ายกวนใจอีกต่อไป
                 } catch (error) {
                     console.error("Error adding document: ", error);
                     alert('เกิดข้อผิดพลาด: ' + error.message);
