@@ -16,7 +16,7 @@ let itemsData = [];
 let currentFilter = 'all';
 
 // รายการคำหยาบที่ต้องการแบน
-const badWordsList = ["เหี้ย", "สัส", "ควย", "เย็ด", "หี", "แตদ", "พ่อง", "แม่ง", "เสือก", "ควาย", "fuck", "shit", "อีเวร"];
+const badWordsList = ["เหี้ย", "สัส", "ควย", "เย็ด", "หี", "แตด", "พ่อง", "แม่ง", "เสือก", "ควาย", "fuck", "shit", "อีเวร"];
 
 function containsBadWords(text) {
     if (!text) return false;
@@ -101,7 +101,7 @@ function filterData() {
     renderCards(filtered);
 }
 
-// ระบบถามรหัสผ่าน 1234 ก่อนลบประกาศ (ผูก Global ชัวร์ 100%)
+// ระบบถามรหัสผ่าน 1234 ก่อนลบประกาศ
 window.deleteItem = async function(id) {
     const pin = prompt("🔒 กรุณาใส่รหัสผ่านเพื่อยืนยันการลบประกาศ:");
     
@@ -178,7 +178,22 @@ document.addEventListener('DOMContentLoaded', () => {
         postFormEl.addEventListener('submit', async function(e) {
             e.preventDefault();
 
-            // ระบบถามรหัสผ่าน 1234 ก่อนลงประกาศ
+            // 📌 1. ดึงข้อมูลมาเช็คก่อนว่ามีช่องไหนว่างไหม
+            const type = document.querySelector('input[name="itemType"]:checked').value;
+            const name = document.getElementById('itemName').value.trim();
+            const location = document.getElementById('itemLocation').value.trim();
+            const date = document.getElementById('itemDate').value;
+            const details = document.getElementById('itemDetails').value.trim();
+            const contact = document.getElementById('itemContact').value.trim();
+            const fileInput = document.getElementById('itemImage');
+
+            // 📌 2. แจ้งเตือนถ้าข้อมูลไม่ครบ
+            if (!name || !location || !date || !contact) {
+                alert('⚠️ กรุณากรอกข้อมูลในช่องที่มีเครื่องหมายดอกจัน (*) ให้ครบถ้วนก่อนลงประกาศครับ');
+                return; // หยุดการทำงานทันที
+            }
+
+            // 📌 3. ระบบถามรหัสผ่าน 1234
             const pin = prompt("🔒 กรุณาใส่รหัสผ่านเพื่ออนุญาตให้ลงประกาศ:");
             
             if (pin !== "1234") {
@@ -188,19 +203,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 return; 
             }
 
-            const type = document.querySelector('input[name="itemType"]:checked').value;
-            const name = document.getElementById('itemName').value;
-            const location = document.getElementById('itemLocation').value;
-            const date = document.getElementById('itemDate').value;
-            const details = document.getElementById('itemDetails').value;
-            const contact = document.getElementById('itemContact').value;
-            const fileInput = document.getElementById('itemImage');
-
+            // 📌 4. ตรวจสอบคำหยาบ
             if (containsBadWords(name) || containsBadWords(details)) {
                 alert('🚫 ขออภัยครับ! ระบบตรวจพบคำไม่สุภาพ กรุณาแก้ไขข้อความก่อนลงประกาศครับ');
                 return;
             }
 
+            // เปลี่ยนสถานะปุ่ม
             const submitBtn = this.querySelector('button[type="submit"]');
             submitBtn.disabled = true;
             submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> กำลังส่งข้อมูล...';
