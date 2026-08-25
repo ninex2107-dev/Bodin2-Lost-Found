@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>BODIN 2 Lost & Found</title>
-    <!-- 📌 เปลี่ยนเป็น v=5 เพื่อบังคับมือถือล้างไฟล์เก่าทิ้ง -->
-    <link rel="stylesheet" href="style.css?v=5">
+    <!-- 📌 อัปเดตเป็น v=6 -->
+    <link rel="stylesheet" href="style.css?v=6">
     <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
@@ -75,11 +75,11 @@
                     <label>ประเภทการประกาศ *</label>
                     <div class="radio-group">
                         <label class="radio-card">
-                            <input type="radio" name="itemType" value="lost" required checked>
+                            <input type="radio" name="itemType" value="lost" checked>
                             <span class="radio-content"><i class="fas fa-bullhorn"></i> ของหาย</span>
                         </label>
                         <label class="radio-card">
-                            <input type="radio" name="itemType" value="found" required>
+                            <input type="radio" name="itemType" value="found">
                             <span class="radio-content"><i class="fas fa-box-open"></i> ของที่พบ</span>
                         </label>
                     </div>
@@ -87,7 +87,7 @@
                 
                 <div class="form-group">
                     <label for="itemName">ชื่อสิ่งของ *</label>
-                    <input type="text" id="itemName" placeholder="เช่น กระเป๋าสตางค์, บัตรนักเรียน, กุญแจ" required>
+                    <input type="text" id="itemName" placeholder="เช่น กระเป๋าสตางค์, บัตรนักเรียน, กุญแจ">
                 </div>
 
                 <div class="form-group">
@@ -98,11 +98,11 @@
                 <div class="form-row">
                     <div class="form-group">
                         <label for="itemLocation">สถานที่ *</label>
-                        <input type="text" id="itemLocation" placeholder="เช่น โรงอาหาร, อาคาร 3" required>
+                        <input type="text" id="itemLocation" placeholder="เช่น โรงอาหาร, อาคาร 3">
                     </div>
                     <div class="form-group">
                         <label for="itemDate">วันที่ (หาย/พบ) *</label>
-                        <input type="date" id="itemDate" required>
+                        <input type="date" id="itemDate">
                     </div>
                 </div>
 
@@ -113,7 +113,7 @@
 
                 <div class="form-group">
                     <label for="itemContact">ช่องทางติดต่อ *</label>
-                    <input type="text" id="itemContact" placeholder="เบอร์โทรศัพท์, IG, Facebook หรือห้องเรียน" required>
+                    <input type="text" id="itemContact" placeholder="เบอร์โทรศัพท์, IG, Facebook หรือห้องเรียน">
                 </div>
 
                 <button type="submit" class="btn-primary w-100 btn-large"><i class="fas fa-paper-plane"></i> ลงประกาศทันที</button>
@@ -139,6 +139,6 @@
         </div>
     </footer>
 
-    <script src="script.js?v=5"></script>
+    <script src="script.js?v=6"></script>
 </body>
 </html>
