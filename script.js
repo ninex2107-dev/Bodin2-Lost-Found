@@ -15,6 +15,62 @@ const db = firebase.firestore();
 let itemsData = [];
 let currentFilter = 'all';
 
+// ตัวแปรควบคุมระบบใส่รหัสผ่าน Custom PIN Modal
+let currentPin = '';
+let pinResolveCallback = null;
+
+function showPinModal() {
+    return new Promise((resolve) => {
+        currentPin = '';
+        updatePinDisplay();
+        document.getElementById('pinModal').classList.add('active');
+        pinResolveCallback = resolve;
+    });
+}
+
+window.pressNum = function(num) {
+    if (currentPin.length < 4) {
+        currentPin += num;
+        updatePinDisplay();
+    }
+}
+
+window.pressDel = function() {
+    if (currentPin.length > 0) {
+        currentPin = currentPin.slice(0, -1);
+        updatePinDisplay();
+    }
+}
+
+function updatePinDisplay() {
+    for (let i = 1; i <= 4; i++) {
+        const dot = document.getElementById(`dot${i}`);
+        if (i <= currentPin.length) {
+            dot.textContent = '*';
+        } else {
+            dot.textContent = '';
+        }
+    }
+}
+
+window.closePinModal = function(success) {
+    document.getElementById('pinModal').classList.remove('active');
+    if (pinResolveCallback) {
+        pinResolveCallback(success);
+        pinResolveCallback = null;
+    }
+}
+
+window.confirmPinModal = function() {
+    if (currentPin === "1234") {
+        closePinModal(true);
+    } else {
+        alert("❌ รหัสผ่านไม่ถูกต้อง!");
+        currentPin = '';
+        updatePinDisplay();
+    }
+}
+
 // รายการคำหยาบที่ต้องการแบน
 const badWordsList = ["เหี้ย", "สัส", "ควย", "เย็ด", "หี", "แตด", "พ่อง", "แม่ง", "เสือก", "ควาย", "fuck", "shit", "อีเวร"];
 
@@ -101,11 +157,10 @@ function filterData() {
     renderCards(filtered);
 }
 
-// ระบบถามรหัสผ่าน 1234 ก่อนลบประกาศ
+// 📌 ระบบลบประกาศผ่าน Custom PIN Modal
 window.deleteItem = async function(id) {
-    const pin = prompt("🔒 กรุณาใส่รหัสผ่านเพื่อยืนยันการลบประกาศ:");
-    
-    if (pin === "1234") {
+    const success = await showPinModal();
+    if (success) {
         if (confirm("รหัสถูกต้อง! คุณต้องการลบประกาศนี้ใช่หรือไม่?")) {
             try {
                 await db.collection("items").doc(id).delete();
@@ -115,8 +170,6 @@ window.deleteItem = async function(id) {
                 alert("เกิดข้อผิดพลาดในการลบ: " + error.message);
             }
         }
-    } else if (pin !== null) { 
-        alert("❌ รหัสผ่านไม่ถูกต้อง! ไม่สามารถลบประกาศได้");
     }
 }
 
@@ -178,7 +231,7 @@ document.addEventListener('DOMContentLoaded', () => {
         postFormEl.addEventListener('submit', async function(e) {
             e.preventDefault();
 
-            // 📌 1. ดึงข้อมูลมาเช็คก่อนว่ามีช่องไหนว่างไหม
+            // เช็คช่องว่างก่อน
             const type = document.querySelector('input[name="itemType"]:checked').value;
             const name = document.getElementById('itemName').value.trim();
             const location = document.getElementById('itemLocation').value.trim();
@@ -187,29 +240,23 @@ document.addEventListener('DOMContentLoaded', () => {
             const contact = document.getElementById('itemContact').value.trim();
             const fileInput = document.getElementById('itemImage');
 
-            // 📌 2. แจ้งเตือนถ้าข้อมูลไม่ครบ
             if (!name || !location || !date || !contact) {
                 alert('⚠️ กรุณากรอกข้อมูลในช่องที่มีเครื่องหมายดอกจัน (*) ให้ครบถ้วนก่อนลงประกาศครับ');
-                return; // หยุดการทำงานทันที
+                return;
             }
 
-            // 📌 3. ระบบถามรหัสผ่าน 1234
-            const pin = prompt("🔒 กรุณาใส่รหัสผ่านเพื่ออนุญาตให้ลงประกาศ:");
-            
-            if (pin !== "1234") {
-                if (pin !== null) { 
-                    alert("❌ รหัสผ่านไม่ถูกต้อง! ไม่สามารถลงประกาศได้");
-                }
-                return; 
+            // 📌 เปิดหน้าต่างใส่รหัสผ่าน Custom PIN Modal
+            const success = await showPinModal();
+            if (!success) {
+                return; // ถ้ากดยกเลิกหรือใส่รหัสผิดจะไม่ทำต่อ
             }
 
-            // 📌 4. ตรวจสอบคำหยาบ
+            // ตรวจสอบคำหยาบ
             if (containsBadWords(name) || containsBadWords(details)) {
                 alert('🚫 ขออภัยครับ! ระบบตรวจพบคำไม่สุภาพ กรุณาแก้ไขข้อความก่อนลงประกาศครับ');
                 return;
             }
 
-            // เปลี่ยนสถานะปุ่ม
             const submitBtn = this.querySelector('button[type="submit"]');
             submitBtn.disabled = true;
             submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> กำลังส่งข้อมูล...';
