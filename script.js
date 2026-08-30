@@ -1,318 +1,285 @@
-// ตั้งค่า Firebase แบบ Compat
-const firebaseConfig = {
-  apiKey: "AIzaSyDnR8htQoEVm9qcEpz1dxJKoZxQwxNoUcw",
-  authDomain: "bodin2-lost-found.firebaseapp.com",
-  projectId: "bodin2-lost-found",
-  storageBucket: "bodin2-lost-found.firebasestorage.app",
-  messagingSenderId: "366439923477",
-  appId: "1:366439923477:web:28d23fabda49e02caa731c",
-  measurementId: "G-W0VKJ5KXBP"
-};
-
-firebase.initializeApp(firebaseConfig);
-const db = firebase.firestore();
-
-let itemsData = [];
-let currentFilter = 'all';
-
-// ตัวแปรควบคุมระบบใส่รหัสผ่าน Custom PIN Modal
-let currentPin = '';
-let pinResolveCallback = null;
-
-function showPinModal() {
-    return new Promise((resolve) => {
-        currentPin = '';
-        updatePinDisplay();
-        document.getElementById('pinModal').classList.add('active');
-        pinResolveCallback = resolve;
-    });
+/* ================= CSS Variables ================= */
+:root {
+    --primary-color: #0B192C;      
+    --primary-light: #1A365D;      
+    --highlight-color: #F59E0B;    
+    --secondary-color: #EC4899;    
+    --text-main: #F8FAFC;          
+    --text-muted: #CBD5E1;         
+    --glass-bg: rgba(255, 255, 255, 0.05);
+    --glass-border: rgba(255, 255, 255, 0.1);
+    --transition: all 0.3s ease;
 }
 
-window.pressNum = function(num) {
-    if (currentPin.length < 4) {
-        currentPin += num;
-        updatePinDisplay();
+* { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Prompt', sans-serif; }
+html { scroll-behavior: smooth; }
+
+body {
+    background-color: var(--primary-color);
+    background-image: 
+        radial-gradient(circle at 15% 50%, rgba(245, 158, 11, 0.08), transparent 25%),
+        radial-gradient(circle at 85% 30%, rgba(236, 72, 153, 0.08), transparent 25%);
+    color: var(--text-main); overflow-x: hidden;
+}
+
+.glass {
+    background: var(--glass-bg);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid var(--glass-border);
+}
+
+h1, h2, h3 { font-weight: 700; line-height: 1.2; }
+.highlight { color: var(--highlight-color); }
+.w-100 { width: 100%; }
+
+button, .btn-primary, .btn-secondary {
+    cursor: pointer; border: none; outline: none; border-radius: 8px;
+    font-size: 1rem; font-weight: 500; transition: var(--transition);
+    display: inline-flex; align-items: center; justify-content: center; gap: 8px; text-decoration: none; padding: 10px 24px;
+}
+.btn-primary { background: linear-gradient(135deg, #F59E0B, #D97706); color: #fff; box-shadow: 0 4px 15px rgba(245, 158, 11, 0.3); }
+.btn-primary:hover { transform: translateY(-2px); }
+.btn-secondary { background: linear-gradient(135deg, #EC4899, #BE185D); color: #fff; box-shadow: 0 4px 15px rgba(236, 72, 153, 0.3); }
+.btn-secondary:hover { transform: translateY(-2px); }
+.btn-large { padding: 14px 24px; font-size: 1.1rem; }
+
+/* Navbar */
+.navbar { position: fixed; top: 0; width: 100%; z-index: 1000; padding: 15px 0; border-bottom: 1px solid var(--glass-border); }
+.nav-container { max-width: 1200px; margin: 0 auto; padding: 0 20px; display: flex; justify-content: space-between; align-items: center; }
+.logo { display: flex; align-items: center; gap: 12px; text-decoration: none; color: var(--text-main); font-size: 1.1rem; font-weight: 700; }
+.nav-logo-img { height: 30px; width: 30px; border-radius: 50%; object-fit: cover; border: 2px solid var(--highlight-color); }
+
+.nav-links { display: flex; list-style: none; gap: 20px; align-items: center; }
+.nav-links a { color: var(--text-main); text-decoration: none; font-weight: 400; font-size: 0.95rem; transition: var(--transition); }
+.nav-links a:hover { color: var(--highlight-color); }
+.hamburger { display: none; font-size: 1.5rem; cursor: pointer; color: var(--text-main); }
+
+/* Hero Section */
+.hero { min-height: 100vh; display: grid; grid-template-columns: 1fr 1fr; align-items: center; max-width: 1200px; margin: 0 auto; padding: 100px 20px 50px; gap: 40px; }
+.hero-content h1 { font-size: 3rem; margin-bottom: 20px; }
+.hero-content p { font-size: 1rem; color: var(--text-muted); margin-bottom: 25px; max-width: 500px; }
+.hero-search { display: flex; align-items: center; padding: 10px 18px; border-radius: 50px; margin-bottom: 25px; background: rgba(255,255,255,0.1); }
+.hero-search input { background: transparent; border: none; outline: none; color: var(--text-main); font-size: 1rem; width: 100%; padding-left: 10px; }
+.hero-search input::placeholder { color: rgba(255,255,255,0.5); }
+.search-icon { color: var(--highlight-color); font-size: 1.1rem; }
+.hero-buttons { display: flex; gap: 12px; flex-wrap: wrap; }
+.hero-image { position: relative; display: flex; justify-content: center; }
+.hero-image img { width: 100%; max-width: 300px; border-radius: 20px; z-index: 2; box-shadow: 0 20px 40px rgba(0,0,0,0.4); border: 3px solid rgba(255,255,255,0.1); }
+.glow-bg { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 250px; height: 250px; background: var(--highlight-color); filter: blur(90px); opacity: 0.2; z-index: 1; }
+
+/* Items Section */
+.items-section { max-width: 1200px; margin: 0 auto; padding: 40px 20px; }
+.section-header { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 30px; flex-wrap: wrap; gap: 15px; }
+.section-header h2 { font-size: 2rem; }
+.filters { display: flex; gap: 8px; background: rgba(255,255,255,0.05); padding: 6px; border-radius: 12px; }
+.filter-btn { background: transparent; border: none; color: var(--text-muted); padding: 8px 16px; border-radius: 8px; font-size: 0.95rem; cursor: pointer; transition: 0.3s; }
+.filter-btn:hover { color: var(--text-main); }
+.filter-btn.active { background: var(--primary-light); color: var(--text-main); font-weight: 500; }
+
+.cards-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; }
+.card { border-radius: 14px; overflow: hidden; transition: var(--transition); position: relative; display: flex; flex-direction: column; justify-content: space-between; }
+.card:hover { transform: translateY(-5px); box-shadow: 0 10px 25px rgba(0,0,0,0.3); border-color: rgba(245, 158, 11, 0.3); }
+.card-img-wrapper { position: relative; width: 100%; height: 180px; background: #112240; }
+.card-img-wrapper img { width: 100%; height: 100%; object-fit: cover; }
+.card-badge { position: absolute; top: 12px; right: 12px; padding: 4px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 600; color: #fff; }
+.badge-lost { background: linear-gradient(135deg, #EF4444, #B91C1C); }
+.badge-found { background: linear-gradient(135deg, #10B981, #047857); }
+.card-content { padding: 18px; display: flex; flex-direction: column; flex-grow: 1; }
+.card-title { font-size: 1.2rem; margin-bottom: 8px; color: var(--highlight-color); }
+.card-desc { color: var(--text-muted); font-size: 0.85rem; margin-bottom: 12px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.card-meta { display: flex; flex-direction: column; gap: 6px; font-size: 0.85rem; margin-bottom: 12px; }
+.card-meta i { width: 18px; color: var(--secondary-color); }
+.card-contact { padding-top: 12px; border-top: 1px solid var(--glass-border); font-size: 0.9rem; font-weight: 500; margin-top: auto; }
+.card-contact i { color: var(--highlight-color); margin-right: 6px; }
+
+/* ปุ่มลบโพสต์ */
+.delete-btn {
+    background: rgba(239, 68, 68, 0.1);
+    color: #EF4444;
+    border: 1px solid rgba(239, 68, 68, 0.3);
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: 0.3s;
+    margin-top: 12px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    width: 100%;
+}
+.delete-btn:hover {
+    background: #EF4444;
+    color: #fff;
+}
+
+/* Form Section */
+.post-section { max-width: 700px; margin: 40px auto 80px; padding: 0 20px; }
+.form-container { padding: 30px; border-radius: 16px; }
+.form-container h2 { text-align: center; margin-bottom: 25px; font-size: 1.8rem; }
+.form-group { margin-bottom: 18px; }
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+label { display: block; margin-bottom: 6px; color: var(--text-muted); font-size: 0.9rem; }
+
+input[type="text"], input[type="date"], textarea {
+    width: 100% !important; 
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+    -webkit-appearance: none; 
+    appearance: none;
+    padding: 10px 14px; 
+    border-radius: 8px;
+    border: 1px solid var(--glass-border); 
+    background: rgba(0,0,0,0.2); 
+    color: var(--text-main); 
+    font-size: 0.95rem;
+    height: 45px; 
+    min-height: 45px;
+    display: block;
+}
+textarea { height: auto; min-height: 100px; }
+input:focus, textarea:focus { outline: none; border-color: var(--highlight-color); background: rgba(0,0,0,0.4); }
+input[type="file"] { width: 100%; padding: 8px; background: rgba(255,255,255,0.05); border-radius: 8px; color: var(--text-muted); font-size: 0.9rem; height: auto; min-height: unset; }
+
+.radio-group { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.radio-card { cursor: pointer; }
+.radio-card input { display: none; }
+.radio-content { display: flex; align-items: center; justify-content: center; gap: 8px; padding: 12px; border-radius: 8px; border: 2px solid var(--glass-border); background: rgba(255,255,255,0.05); color: var(--text-muted); font-weight: 500; font-size: 0.95rem; transition: 0.3s;}
+.radio-card input:checked + .radio-content { border-color: var(--highlight-color); background: rgba(245, 158, 11, 0.1); color: var(--highlight-color); }
+
+/* Footer */
+footer { background: var(--primary-light); border-top: 1px solid var(--glass-border); padding: 35px 20px; text-align: center; }
+.footer-logo { width: 45px; height: 45px; border-radius: 50%; margin-bottom: 12px; border: 2px solid var(--text-muted); object-fit: cover; }
+.footer-content h3 { margin-bottom: 8px; font-size: 1.1rem; }
+.footer-content p { color: var(--text-muted); font-size: 0.85rem; margin-bottom: 4px; }
+
+
+/* 📌 หน้าต่างใส่รหัสผ่าน (Custom PIN Modal) - ปรับปรุงตรงตามแบบ 100% */
+.pin-modal-overlay {
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(11, 25, 44, 0.85); /* พื้นหลังมืดโปร่งแสง */
+    display: none;
+    justify-content: center;
+    align-items: center;
+    z-index: 3000;
+}
+.pin-modal-overlay.active {
+    display: flex;
+}
+.pin-modal {
+    width: 320px;
+    background: #172740; /* สีพื้นหลังกล่องน้ำเงินเข้ม */
+    border-radius: 20px;
+    padding: 25px 20px;
+    text-align: center;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    border: 1px solid rgba(255,255,255,0.05);
+}
+.pin-modal h3 {
+    margin-bottom: 25px;
+    font-size: 1.25rem;
+    color: #F8FAFC;
+    font-weight: 600;
+}
+.pin-dots {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin-bottom: 25px;
+}
+.pin-dot {
+    width: 48px;
+    height: 52px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+    background: rgba(0,0,0,0.2); /* สีพื้นหลังกล่องรหัสโปร่งๆ */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.8rem;
+    color: #fff;
+    font-weight: bold;
+    transition: 0.2s;
+}
+.pin-dot.active {
+    border-color: #F59E0B; /* ขอบส้มอ่อนๆ เวลามีรหัส */
+    box-shadow: 0 0 8px rgba(245, 158, 11, 0.3);
+}
+
+.numpad {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    margin-bottom: 25px;
+}
+.num-btn {
+    background: #25395A; /* สีปุ่มตัวเลขทึบ (น้ำเงินอมเทา) */
+    border: 1px solid rgba(255,255,255,0.05);
+    color: #fff;
+    font-size: 1.4rem;
+    font-weight: 600;
+    padding: 18px 0;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.num-btn:active {
+    background: #364B6E; /* สว่างขึ้นตอนกด */
+}
+.num-del {
+    font-size: 1.2rem;
+}
+
+.pin-actions {
+    display: flex;
+    gap: 15px;
+}
+.btn-pin-cancel, .btn-pin-confirm {
+    flex: 1;
+    padding: 14px;
+    font-size: 1rem;
+    font-weight: 600;
+    border-radius: 12px;
+    border: none;
+    cursor: pointer;
+    transition: 0.2s;
+    color: #fff;
+}
+.btn-pin-cancel {
+    background: linear-gradient(135deg, #EC4899, #BE185D); /* สีชมพู ยกเลิก */
+}
+.btn-pin-confirm {
+    background: linear-gradient(135deg, #F59E0B, #D97706); /* สีส้ม ยืนยัน */
+}
+.btn-pin-cancel:active, .btn-pin-confirm:active {
+    transform: scale(0.95);
+}
+
+.fade-in-up { animation: fadeInUp 0.3s ease-out forwards; }
+.bounce { animation: float 4s ease-in-out infinite; }
+@keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes float { 0% { transform: translateY(0px); } 50% { transform: translateY(-10px); } 100% { transform: translateY(0px); } }
+
+/* ================= Mobile Responsive ================= */
+@media (max-width: 768px) {
+    .nav-links {
+        position: absolute; top: 100%; left: 0; width: 100%;
+        background: var(--primary-color); flex-direction: column; padding: 20px 0;
+        border-bottom: 1px solid var(--glass-border); display: none;
     }
-}
-
-window.pressDel = function() {
-    if (currentPin.length > 0) {
-        currentPin = currentPin.slice(0, -1);
-        updatePinDisplay();
-    }
-}
-
-function updatePinDisplay() {
-    for (let i = 1; i <= 4; i++) {
-        const dot = document.getElementById(`dot${i}`);
-        if (i <= currentPin.length) {
-            dot.textContent = '*';
-        } else {
-            dot.textContent = '';
-        }
-    }
-}
-
-window.closePinModal = function(success) {
-    document.getElementById('pinModal').classList.remove('active');
-    if (pinResolveCallback) {
-        pinResolveCallback(success);
-        pinResolveCallback = null;
-    }
-}
-
-window.confirmPinModal = function() {
-    if (currentPin === "1234") {
-        closePinModal(true);
-    } else {
-        alert("❌ รหัสผ่านไม่ถูกต้อง!");
-        currentPin = '';
-        updatePinDisplay();
-    }
-}
-
-// รายการคำหยาบที่ต้องการแบน
-const badWordsList = ["เหี้ย", "สัส", "ควย", "เย็ด", "หี", "แตด", "พ่อง", "แม่ง", "เสือก", "ควาย", "fuck", "shit", "อีเวร"];
-
-function containsBadWords(text) {
-    if (!text) return false;
-    return badWordsList.some(word => text.includes(word));
-}
-
-function renderCards(dataToRender) {
-    const container = document.getElementById('cardsContainer');
-    if(!container) return;
-    container.innerHTML = '';
-
-    if (dataToRender.length === 0) {
-        container.innerHTML = `<p style="grid-column: 1/-1; text-align: center; color: var(--text-muted); padding: 40px;">ยังไม่มีประกาศสิ่งของในระบบ</p>`;
-        return;
-    }
-
-    dataToRender.forEach(item => {
-        const isLost = item.type === 'lost';
-        const badgeClass = isLost ? 'badge-lost' : 'badge-found';
-        const badgeText = isLost ? 'ของหาย' : 'เก็บได้';
-        const fallbackImage = isLost ? 'https://placehold.co/400x250/2a1b38/ffffff?text=Lost+Item' : 'https://placehold.co/400x250/1b382c/ffffff?text=Found+Item';
-        
-        let dateStr = item.date;
-        try {
-            const dateObj = new Date(item.date);
-            dateStr = dateObj.toLocaleDateString('th-TH', { year: 'numeric', month: 'short', day: 'numeric' });
-        } catch(e) {}
-
-        const cardHTML = `
-            <div class="card glass">
-                <div class="card-img-wrapper">
-                    <span class="card-badge ${badgeClass}">${badgeText}</span>
-                    <img src="${item.image || fallbackImage}" alt="${item.name}" onerror="this.src='${fallbackImage}'">
-                </div>
-                <div class="card-content">
-                    <h3 class="card-title">${item.name}</h3>
-                    <p class="card-desc">${item.details || 'ไม่มีรายละเอียดเพิ่มเติม'}</p>
-                    
-                    <div class="card-meta">
-                        <div><i class="fas fa-map-marker-alt"></i> ${item.location}</div>
-                        <div><i class="fas fa-calendar-alt"></i> ${dateStr}</div>
-                    </div>
-                    
-                    <div class="card-contact">
-                        <i class="fas fa-address-book"></i> ติดต่อ: ${item.contact}
-                    </div>
-
-                    <button class="delete-btn" onclick="deleteItem('${item.id}')">
-                        <i class="fas fa-trash-alt"></i> ลบประกาศนี้
-                    </button>
-                </div>
-            </div>
-        `;
-        container.insertAdjacentHTML('beforeend', cardHTML);
-    });
-}
-
-function initRealtimeData() {
-    db.collection("items").orderBy("createdAt", "desc").onSnapshot((querySnapshot) => {
-        itemsData = [];
-        querySnapshot.forEach((doc) => {
-            itemsData.push({ id: doc.id, ...doc.data() });
-        });
-        filterData();
-    }, (error) => {
-        console.error("Error fetching data: ", error);
-    });
-}
-
-function filterData() {
-    const searchInput = document.getElementById('searchInput');
-    const searchTerm = searchInput ? searchInput.value.toLowerCase() : '';
+    .nav-links.active { display: flex; }
+    .hamburger { display: block; }
     
-    const filtered = itemsData.filter(item => {
-        const matchType = currentFilter === 'all' || item.type === currentFilter;
-        const matchSearch = item.name.toLowerCase().includes(searchTerm) || 
-                            item.location.toLowerCase().includes(searchTerm) || 
-                            (item.details && item.details.toLowerCase().includes(searchTerm));
-        return matchType && matchSearch;
-    });
-
-    renderCards(filtered);
-}
-
-// 📌 ระบบลบประกาศผ่าน Custom PIN Modal
-window.deleteItem = async function(id) {
-    const success = await showPinModal();
-    if (success) {
-        if (confirm("รหัสถูกต้อง! คุณต้องการลบประกาศนี้ใช่หรือไม่?")) {
-            try {
-                await db.collection("items").doc(id).delete();
-                alert("ลบประกาศเรียบร้อยแล้ว");
-            } catch (error) {
-                console.error("Error deleting document: ", error);
-                alert("เกิดข้อผิดพลาดในการลบ: " + error.message);
-            }
-        }
-    }
-}
-
-function compressImage(file, callback) {
-    const reader = new FileReader();
-    reader.readAsDataURL(file);
-    reader.onload = function (event) {
-        const img = new Image();
-        img.src = event.target.result;
-        img.onload = function () {
-            const canvas = document.createElement('canvas');
-            const MAX_WIDTH = 500;
-            const MAX_HEIGHT = 500;
-            let width = img.width;
-            let height = img.height;
-
-            if (width > height) {
-                if (width > MAX_WIDTH) {
-                    height *= MAX_WIDTH / width;
-                    width = MAX_WIDTH;
-                }
-            } else {
-                if (height > MAX_HEIGHT) {
-                    width *= MAX_HEIGHT / height;
-                    height = MAX_HEIGHT;
-                }
-            }
-
-            canvas.width = width;
-            canvas.height = height;
-            const ctx = canvas.getContext('2d');
-            ctx.drawImage(img, 0, 0, width, height);
-            const dataUrl = canvas.toDataURL('image/jpeg', 0.6);
-            callback(dataUrl);
-        }
-    }
-}
-
-document.addEventListener('DOMContentLoaded', () => {
-    initRealtimeData();
-
-    const searchInput = document.getElementById('searchInput');
-    if(searchInput) searchInput.addEventListener('input', filterData);
-
-    document.querySelectorAll('.filter-btn').forEach(btn => {
-        btn.addEventListener('click', (e) => {
-            document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-            e.target.classList.add('active');
-            currentFilter = e.target.getAttribute('data-filter');
-            filterData();
-        });
-    });
-
-    const dateInput = document.getElementById('itemDate');
-    if(dateInput) dateInput.valueAsDate = new Date();
-
-    const postFormEl = document.getElementById('postForm');
-    if(postFormEl) {
-        postFormEl.addEventListener('submit', async function(e) {
-            e.preventDefault();
-
-            // เช็คช่องว่างก่อน
-            const type = document.querySelector('input[name="itemType"]:checked').value;
-            const name = document.getElementById('itemName').value.trim();
-            const location = document.getElementById('itemLocation').value.trim();
-            const date = document.getElementById('itemDate').value;
-            const details = document.getElementById('itemDetails').value.trim();
-            const contact = document.getElementById('itemContact').value.trim();
-            const fileInput = document.getElementById('itemImage');
-
-            if (!name || !location || !date || !contact) {
-                alert('⚠️ กรุณากรอกข้อมูลในช่องที่มีเครื่องหมายดอกจัน (*) ให้ครบถ้วนก่อนลงประกาศครับ');
-                return;
-            }
-
-            // 📌 เปิดหน้าต่างใส่รหัสผ่าน Custom PIN Modal
-            const success = await showPinModal();
-            if (!success) {
-                return; // ถ้ากดยกเลิกหรือใส่รหัสผิดจะไม่ทำต่อ
-            }
-
-            // ตรวจสอบคำหยาบ
-            if (containsBadWords(name) || containsBadWords(details)) {
-                alert('🚫 ขออภัยครับ! ระบบตรวจพบคำไม่สุภาพ กรุณาแก้ไขข้อความก่อนลงประกาศครับ');
-                return;
-            }
-
-            const submitBtn = this.querySelector('button[type="submit"]');
-            submitBtn.disabled = true;
-            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> กำลังส่งข้อมูล...';
-
-            const saveToFirestore = async (imageBase64) => {
-                try {
-                    await db.collection("items").add({
-                        type,
-                        name,
-                        location,
-                        date,
-                        details,
-                        contact,
-                        image: imageBase64,
-                        createdAt: firebase.firestore.FieldValue.serverTimestamp()
-                    });
-
-                    this.reset();
-                    document.getElementById('itemDate').valueAsDate = new Date();
-                    alert('ลงประกาศสำเร็จ!');
-                } catch (error) {
-                    console.error("Error adding document: ", error);
-                    alert('เกิดข้อผิดพลาด: ' + error.message);
-                } finally {
-                    submitBtn.disabled = false;
-                    submitBtn.innerHTML = '<i class="fas fa-paper-plane"></i> ลงประกาศทันที';
-                }
-            };
-
-            if (fileInput.files && fileInput.files[0]) {
-                compressImage(fileInput.files[0], (compressedDataUrl) => {
-                    saveToFirestore(compressedDataUrl);
-                });
-            } else {
-                saveToFirestore(null);
-            }
-        });
-    }
-});
-
-window.setGlobalFilter = function(type) {
-    document.querySelectorAll('.filter-btn').forEach(b => {
-        if (b.getAttribute('data-filter') === type) {
-            b.click();
-        }
-    });
-}
-
-window.setFormType = function(type) {
-    const radio = document.querySelector(`input[name="itemType"][value="${type}"]`);
-    if(radio) radio.checked = true;
-}
-
-const hamburger = document.getElementById('hamburger');
-if(hamburger) {
-    hamburger.addEventListener('click', () => {
-        document.getElementById('navLinks').classList.toggle('active');
-    });
+    .hero { grid-template-columns: 1fr; text-align: center; padding-top: 120px; }
+    .hero-content p { margin: 0 auto 25px; }
+    .hero-search { max-width: 100%; margin: 0 auto 25px; }
+    .hero-buttons { justify-content: center; }
+    .hero-image { order: -1; }
+    .form-row { grid-template-columns: 1fr; } 
 }
