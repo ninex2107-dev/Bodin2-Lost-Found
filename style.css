@@ -155,13 +155,12 @@ footer { background: var(--primary-light); border-top: 1px solid var(--glass-bor
 .footer-content h3 { margin-bottom: 8px; font-size: 1.1rem; }
 .footer-content p { color: var(--text-muted); font-size: 0.85rem; margin-bottom: 4px; }
 
-/* 📌 ดีไซน์หน้าต่างใส่รหัสผ่าน Custom PIN Modal */
+
+/* 📌 หน้าต่างใส่รหัสผ่าน (Custom PIN Modal) - ปรับปรุงตรงตามแบบ 100% */
 .pin-modal-overlay {
     position: fixed;
     top: 0; left: 0; width: 100%; height: 100%;
-    background: rgba(11, 25, 44, 0.85);
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
+    background: rgba(11, 25, 44, 0.85); /* พื้นหลังมืดโปร่งแสง */
     display: none;
     justify-content: center;
     align-items: center;
@@ -172,71 +171,97 @@ footer { background: var(--primary-light); border-top: 1px solid var(--glass-bor
 }
 .pin-modal {
     width: 320px;
-    background: rgba(26, 54, 93, 0.9);
-    border: 1px solid var(--glass-border);
+    background: #172740; /* สีพื้นหลังกล่องน้ำเงินเข้ม */
     border-radius: 20px;
-    padding: 25px;
+    padding: 25px 20px;
     text-align: center;
-    box-shadow: 0 25px 50px rgba(0,0,0,0.6);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    border: 1px solid rgba(255,255,255,0.05);
 }
 .pin-modal h3 {
-    margin-bottom: 20px;
-    font-size: 1.4rem;
-    color: var(--text-main);
-    letter-spacing: 0.5px;
+    margin-bottom: 25px;
+    font-size: 1.25rem;
+    color: #F8FAFC;
+    font-weight: 600;
 }
 .pin-dots {
     display: flex;
     justify-content: center;
-    gap: 12px;
+    gap: 10px;
     margin-bottom: 25px;
 }
 .pin-dot {
     width: 48px;
     height: 52px;
-    border: 2px solid var(--glass-border);
-    border-radius: 12px;
-    background: rgba(0,0,0,0.3);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+    background: rgba(0,0,0,0.2); /* สีพื้นหลังกล่องรหัสโปร่งๆ */
     display: flex;
     align-items: center;
     justify-content: center;
     font-size: 1.8rem;
-    color: var(--highlight-color);
+    color: #fff;
     font-weight: bold;
+    transition: 0.2s;
 }
+.pin-dot.active {
+    border-color: #F59E0B; /* ขอบส้มอ่อนๆ เวลามีรหัส */
+    box-shadow: 0 0 8px rgba(245, 158, 11, 0.3);
+}
+
 .numpad {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
     gap: 12px;
-    margin-bottom: 20px;
+    margin-bottom: 25px;
 }
 .num-btn {
-    background: rgba(255, 255, 255, 0.08);
-    border: 1px solid var(--glass-border);
-    color: var(--text-main);
-    font-size: 1.25rem;
+    background: #25395A; /* สีปุ่มตัวเลขทึบ (น้ำเงินอมเทา) */
+    border: 1px solid rgba(255,255,255,0.05);
+    color: #fff;
+    font-size: 1.4rem;
     font-weight: 600;
-    padding: 16px 0;
+    padding: 18px 0;
     border-radius: 12px;
     cursor: pointer;
     transition: 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 .num-btn:active {
-    background: var(--highlight-color);
-    color: #0B192C;
+    background: #364B6E; /* สว่างขึ้นตอนกด */
 }
-.pin-actions {
-    display: flex;
-    gap: 10px;
-}
-.pin-actions button {
-    flex: 1;
-    padding: 12px;
-    font-size: 0.95rem;
-    border-radius: 10px;
+.num-del {
+    font-size: 1.2rem;
 }
 
-.fade-in-up { animation: fadeInUp 0.4s ease-out forwards; }
+.pin-actions {
+    display: flex;
+    gap: 15px;
+}
+.btn-pin-cancel, .btn-pin-confirm {
+    flex: 1;
+    padding: 14px;
+    font-size: 1rem;
+    font-weight: 600;
+    border-radius: 12px;
+    border: none;
+    cursor: pointer;
+    transition: 0.2s;
+    color: #fff;
+}
+.btn-pin-cancel {
+    background: linear-gradient(135deg, #EC4899, #BE185D); /* สีชมพู ยกเลิก */
+}
+.btn-pin-confirm {
+    background: linear-gradient(135deg, #F59E0B, #D97706); /* สีส้ม ยืนยัน */
+}
+.btn-pin-cancel:active, .btn-pin-confirm:active {
+    transform: scale(0.95);
+}
+
+.fade-in-up { animation: fadeInUp 0.3s ease-out forwards; }
 .bounce { animation: float 4s ease-in-out infinite; }
 @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
 @keyframes float { 0% { transform: translateY(0px); } 50% { transform: translateY(-10px); } 100% { transform: translateY(0px); } }
