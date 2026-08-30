@@ -156,11 +156,11 @@ footer { background: var(--primary-light); border-top: 1px solid var(--glass-bor
 .footer-content p { color: var(--text-muted); font-size: 0.85rem; margin-bottom: 4px; }
 
 
-/* 📌 หน้าต่างใส่รหัสผ่าน (Custom PIN Modal) */
+/* 📌 หน้าต่างใส่รหัสผ่าน (Custom PIN Modal) - แก้ใหม่ให้ตรงแบบ 100% */
 .pin-modal-overlay {
     position: fixed;
     top: 0; left: 0; width: 100%; height: 100%;
-    background: rgba(11, 25, 44, 0.85); /* พื้นหลังมืดโปร่งแสง */
+    background: rgba(0, 0, 0, 0.6); /* พื้นหลังดำโปร่งแสง */
     display: none;
     justify-content: center;
     align-items: center;
@@ -170,70 +170,70 @@ footer { background: var(--primary-light); border-top: 1px solid var(--glass-bor
     display: flex;
 }
 .pin-modal {
-    width: 320px;
-    background: #172740; /* สีพื้นหลังกล่องน้ำเงินเข้ม */
-    border-radius: 20px;
-    padding: 25px 20px;
+    width: 310px;
+    background: #172640; /* สีน้ำเงินเข้มตามแบบ */
+    border-radius: 16px;
+    padding: 30px 25px;
     text-align: center;
     box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-    border: 1px solid rgba(255,255,255,0.05);
+    border: none;
 }
 .pin-modal h3 {
     margin-bottom: 25px;
-    font-size: 1.25rem;
-    color: #F8FAFC;
-    font-weight: 600;
+    font-size: 1.2rem;
+    color: #ffffff;
+    font-weight: 700;
 }
 .pin-dots {
     display: flex;
     justify-content: center;
-    gap: 10px;
-    margin-bottom: 25px;
+    gap: 12px;
+    margin-bottom: 30px;
 }
 .pin-dot {
     width: 48px;
     height: 52px;
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    border: none;
     border-radius: 10px;
-    background: rgba(0,0,0,0.2); /* สีพื้นหลังกล่องรหัสโปร่งๆ */
+    background: #0E1829; /* กล่องรหัสสีทึบๆ เนียนๆ */
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 1.8rem;
+    font-size: 2.2rem;
     color: #fff;
-    font-weight: bold;
-    transition: 0.2s;
+    box-shadow: inset 0 2px 5px rgba(0,0,0,0.4); /* ให้ดูบุ๋มลงไป */
 }
+/* เอาเส้นขอบออกทั้งหมดแม้ตอนพิมพ์รหัส */
 .pin-dot.active {
-    border-color: #F59E0B; /* ขอบส้มอ่อนๆ เวลามีรหัส */
-    box-shadow: 0 0 8px rgba(245, 158, 11, 0.3);
+    border: none;
+    box-shadow: inset 0 2px 5px rgba(0,0,0,0.4);
 }
 
 .numpad {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
     gap: 12px;
-    margin-bottom: 25px;
+    margin-bottom: 30px;
 }
 .num-btn {
-    background: #25395A; /* สีปุ่มตัวเลขทึบ (น้ำเงินอมเทา) */
-    border: 1px solid rgba(255,255,255,0.05);
-    color: #fff;
+    background: #273956; /* สีปุ่มตัวเลขสีเทาอมน้ำเงิน */
+    border: none;
+    color: #ffffff;
     font-size: 1.4rem;
-    font-weight: 600;
-    padding: 18px 0;
-    border-radius: 12px;
+    font-weight: 700;
+    padding: 16px 0;
+    border-radius: 10px;
     cursor: pointer;
-    transition: 0.2s;
+    transition: background-color 0.1s;
     display: flex;
     align-items: center;
     justify-content: center;
 }
 .num-btn:active {
-    background: #364B6E; /* สว่างขึ้นตอนกด */
+    background: #364A6A; 
 }
 .num-del {
-    font-size: 1.2rem;
+    font-size: 1.1rem;
 }
 
 .pin-actions {
@@ -242,23 +242,23 @@ footer { background: var(--primary-light); border-top: 1px solid var(--glass-bor
 }
 .btn-pin-cancel, .btn-pin-confirm {
     flex: 1;
-    padding: 14px;
+    padding: 14px 0;
     font-size: 1rem;
-    font-weight: 600;
-    border-radius: 12px;
+    font-weight: 700;
+    border-radius: 10px;
     border: none;
     cursor: pointer;
-    transition: 0.2s;
-    color: #fff;
+    color: #ffffff;
+    transition: opacity 0.2s;
 }
 .btn-pin-cancel {
-    background: linear-gradient(135deg, #EC4899, #BE185D); /* สีชมพู ยกเลิก */
+    background: #D92973; /* สีชมพูทึบ */
 }
 .btn-pin-confirm {
-    background: linear-gradient(135deg, #F59E0B, #D97706); /* สีส้ม ยืนยัน */
+    background: #E88B00; /* สีส้มทึบ */
 }
 .btn-pin-cancel:active, .btn-pin-confirm:active {
-    transform: scale(0.95);
+    opacity: 0.7;
 }
 
 .fade-in-up { animation: fadeInUp 0.3s ease-out forwards; }
