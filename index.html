@@ -4,8 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>BODIN 2 Lost & Found</title>
-    <!-- 📌 อัปเดตเป็น v=6 -->
-    <link rel="stylesheet" href="style.css?v=6">
+    <link rel="stylesheet" href="style.css?v=7">
     <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
@@ -134,11 +133,41 @@
             <p class="copyright">© 2026 Bodindecha (Sing Singhaseni) 2.</p>
             
             <p style="font-size: 0.8rem; color: rgba(255,255,255,0.4); margin-top: 15px; letter-spacing: 0.5px; text-transform: capitalize;">
-                Credit: Nine | Team: Korn & Eric
+                Credit: Nine | Team: Toon & Eric
             </p>
         </div>
     </footer>
 
-    <script src="script.js?v=6"></script>
+    <!-- 📌 หน้าต่างกรอกรหัสผ่านแบบกำหนดเอง (Custom PIN Modal) -->
+    <div id="pinModal" class="pin-modal-overlay">
+        <div class="pin-modal glass fade-in-up">
+            <h3>ใส่รหัสผ่าน</h3>
+            <div class="pin-dots">
+                <div class="pin-dot" id="dot1"></div>
+                <div class="pin-dot" id="dot2"></div>
+                <div class="pin-dot" id="dot3"></div>
+                <div class="pin-dot" id="dot4"></div>
+            </div>
+            <div class="numpad">
+                <button type="button" class="num-btn" onclick="pressNum('1')">1</button>
+                <button type="button" class="num-btn" onclick="pressNum('2')">2</button>
+                <button type="button" class="num-btn" onclick="pressNum('3')">3</button>
+                <button type="button" class="num-btn" onclick="pressNum('4')">4</button>
+                <button type="button" class="num-btn" onclick="pressNum('5')">5</button>
+                <button type="button" class="num-btn" onclick="pressNum('6')">6</button>
+                <button type="button" class="num-btn" onclick="pressNum('7')">7</button>
+                <button type="button" class="num-btn" onclick="pressNum('8')">8</button>
+                <button type="button" class="num-btn" onclick="pressNum('9')">9</button>
+                <button type="button" class="num-btn" onclick="pressNum('0')">0</button>
+                <button type="button" class="num-btn" onclick="pressDel()"><i class="fas fa-backspace"></i></button>
+            </div>
+            <div class="pin-actions">
+                <button type="button" class="btn-secondary" onclick="closePinModal(false)">ยกเลิก</button>
+                <button type="button" class="btn-primary" onclick="confirmPinModal()">ยืนยัน</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js?v=7"></script>
 </body>
 </html>
