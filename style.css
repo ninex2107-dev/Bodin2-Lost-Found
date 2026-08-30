@@ -156,7 +156,7 @@ footer { background: var(--primary-light); border-top: 1px solid var(--glass-bor
 .footer-content p { color: var(--text-muted); font-size: 0.85rem; margin-bottom: 4px; }
 
 
-/* 📌 หน้าต่างใส่รหัสผ่าน (Custom PIN Modal) - ปรับปรุงตรงตามแบบ 100% */
+/* 📌 หน้าต่างใส่รหัสผ่าน (Custom PIN Modal) */
 .pin-modal-overlay {
     position: fixed;
     top: 0; left: 0; width: 100%; height: 100%;
