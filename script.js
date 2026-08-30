@@ -19,11 +19,18 @@ let currentFilter = 'all';
 let currentPin = '';
 let pinResolveCallback = null;
 
+// 📌 เพิ่มระบบตรวจสอบข้อผิดพลาด (กันแอปค้างถ้าไฟล์ HTML ไม่สมบูรณ์)
 function showPinModal() {
     return new Promise((resolve) => {
+        const modalEl = document.getElementById('pinModal');
+        if (!modalEl) {
+            alert("❌ ระบบโหลดหน้าต่างรหัสผ่านไม่สำเร็จ (อาจเกิดจากแคชค้าง) กรุณาปิดแท็บนี้แล้วเปิดเว็บใหม่อีกครั้งครับ");
+            resolve(false);
+            return;
+        }
         currentPin = '';
         updatePinDisplay();
-        document.getElementById('pinModal').classList.add('active');
+        modalEl.classList.add('active');
         pinResolveCallback = resolve;
     });
 }
@@ -42,7 +49,6 @@ window.pressDel = function() {
     }
 }
 
-// 📌 ควบคุมให้จุดที่ใส่รหัสแล้ว มีแสงสีส้มตาม CSS
 function updatePinDisplay() {
     for (let i = 1; i <= 4; i++) {
         const dot = document.getElementById(`dot${i}`);
@@ -59,7 +65,8 @@ function updatePinDisplay() {
 }
 
 window.closePinModal = function(success) {
-    document.getElementById('pinModal').classList.remove('active');
+    const modalEl = document.getElementById('pinModal');
+    if(modalEl) modalEl.classList.remove('active');
     if (pinResolveCallback) {
         pinResolveCallback(success);
         pinResolveCallback = null;
@@ -76,7 +83,7 @@ window.confirmPinModal = function() {
     }
 }
 
-// รายการคำหยาบที่ต้องการแบน
+// รายการคำหยาบ
 const badWordsList = ["เหี้ย", "สัส", "ควย", "เย็ด", "หี", "แตด", "พ่อง", "แม่ง", "เสือก", "ควาย", "fuck", "shit", "อีเวร"];
 
 function containsBadWords(text) {
@@ -162,7 +169,6 @@ function filterData() {
     renderCards(filtered);
 }
 
-// 📌 ระบบลบประกาศผ่าน Custom PIN Modal
 window.deleteItem = async function(id) {
     const success = await showPinModal();
     if (success) {
@@ -178,38 +184,51 @@ window.deleteItem = async function(id) {
     }
 }
 
+// 📌 เพิ่มระบบดักจับ Error เวลาย่อรูป เพื่อป้องกันแอปเด้งจอขาว
 function compressImage(file, callback) {
-    const reader = new FileReader();
-    reader.readAsDataURL(file);
-    reader.onload = function (event) {
-        const img = new Image();
-        img.src = event.target.result;
-        img.onload = function () {
-            const canvas = document.createElement('canvas');
-            const MAX_WIDTH = 500;
-            const MAX_HEIGHT = 500;
-            let width = img.width;
-            let height = img.height;
+    try {
+        const reader = new FileReader();
+        reader.onerror = function() {
+            alert("❌ ไม่สามารถอ่านไฟล์รูปภาพได้ อาจเกิดจากไฟล์ใหญ่เกินไปครับ");
+            callback(null);
+        };
+        reader.readAsDataURL(file);
+        reader.onload = function (event) {
+            const img = new Image();
+            img.onerror = function() {
+                alert("❌ ไฟล์ภาพมีปัญหา กรุณาลองใช้รูปอื่นครับ");
+                callback(null);
+            }
+            img.src = event.target.result;
+            img.onload = function () {
+                try {
+                    const canvas = document.createElement('canvas');
+                    const MAX_WIDTH = 500;
+                    const MAX_HEIGHT = 500;
+                    let width = img.width;
+                    let height = img.height;
 
-            if (width > height) {
-                if (width > MAX_WIDTH) {
-                    height *= MAX_WIDTH / width;
-                    width = MAX_WIDTH;
-                }
-            } else {
-                if (height > MAX_HEIGHT) {
-                    width *= MAX_HEIGHT / height;
-                    height = MAX_HEIGHT;
+                    if (width > height) {
+                        if (width > MAX_WIDTH) { height *= MAX_WIDTH / width; width = MAX_WIDTH; }
+                    } else {
+                        if (height > MAX_HEIGHT) { width *= MAX_HEIGHT / height; height = MAX_HEIGHT; }
+                    }
+
+                    canvas.width = width;
+                    canvas.height = height;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, width, height);
+                    const dataUrl = canvas.toDataURL('image/jpeg', 0.6);
+                    callback(dataUrl);
+                } catch (err) {
+                    alert("❌ มือถือประมวลผลรูปภาพไม่ไหว (ไฟล์อาจใหญ่ไป) ระบบจะลงประกาศแบบไม่มีรูปนะครับ");
+                    callback(null);
                 }
             }
-
-            canvas.width = width;
-            canvas.height = height;
-            const ctx = canvas.getContext('2d');
-            ctx.drawImage(img, 0, 0, width, height);
-            const dataUrl = canvas.toDataURL('image/jpeg', 0.6);
-            callback(dataUrl);
         }
+    } catch (err) {
+        alert("❌ เกิดข้อผิดพลาดในการประมวลผลรูปภาพ กรุณาลองใหม่ครับ");
+        callback(null);
     }
 }
 
@@ -234,70 +253,63 @@ document.addEventListener('DOMContentLoaded', () => {
     const postFormEl = document.getElementById('postForm');
     if(postFormEl) {
         postFormEl.addEventListener('submit', async function(e) {
-            // 📌 กันการรีเฟรช 100%
-            e.preventDefault();
+            e.preventDefault(); // กันเด้งรีเฟรช 100%
 
-            // เช็คช่องว่างก่อน
-            const type = document.querySelector('input[name="itemType"]:checked').value;
-            const name = document.getElementById('itemName').value.trim();
-            const location = document.getElementById('itemLocation').value.trim();
-            const date = document.getElementById('itemDate').value;
-            const details = document.getElementById('itemDetails').value.trim();
-            const contact = document.getElementById('itemContact').value.trim();
-            const fileInput = document.getElementById('itemImage');
+            try {
+                const type = document.querySelector('input[name="itemType"]:checked').value;
+                const name = document.getElementById('itemName').value.trim();
+                const location = document.getElementById('itemLocation').value.trim();
+                const date = document.getElementById('itemDate').value;
+                const details = document.getElementById('itemDetails').value.trim();
+                const contact = document.getElementById('itemContact').value.trim();
+                const fileInput = document.getElementById('itemImage');
 
-            if (!name || !location || !date || !contact) {
-                alert('⚠️ กรุณากรอกข้อมูลในช่องที่มีเครื่องหมายดอกจัน (*) ให้ครบถ้วนก่อนลงประกาศครับ');
-                return;
-            }
-
-            // 📌 เปิดหน้าต่างใส่รหัสผ่าน Custom PIN Modal
-            const success = await showPinModal();
-            if (!success) {
-                return; // ถ้ากดยกเลิกหรือใส่รหัสผิดจะไม่ทำต่อ
-            }
-
-            // ตรวจสอบคำหยาบ
-            if (containsBadWords(name) || containsBadWords(details)) {
-                alert('🚫 ขออภัยครับ! ระบบตรวจพบคำไม่สุภาพ กรุณาแก้ไขข้อความก่อนลงประกาศครับ');
-                return;
-            }
-
-            const submitBtn = this.querySelector('button[type="submit"]');
-            submitBtn.disabled = true;
-            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> กำลังส่งข้อมูล...';
-
-            const saveToFirestore = async (imageBase64) => {
-                try {
-                    await db.collection("items").add({
-                        type,
-                        name,
-                        location,
-                        date,
-                        details,
-                        contact,
-                        image: imageBase64,
-                        createdAt: firebase.firestore.FieldValue.serverTimestamp()
-                    });
-
-                    this.reset();
-                    document.getElementById('itemDate').valueAsDate = new Date();
-                    alert('ลงประกาศสำเร็จ!');
-                } catch (error) {
-                    console.error("Error adding document: ", error);
-                    alert('เกิดข้อผิดพลาด: ' + error.message);
-                } finally {
-                    submitBtn.disabled = false;
-                    submitBtn.innerHTML = '<i class="fas fa-paper-plane"></i> ลงประกาศทันที';
+                if (!name || !location || !date || !contact) {
+                    alert('⚠️ กรุณากรอกข้อมูลในช่องที่มีเครื่องหมายดอกจัน (*) ให้ครบถ้วนก่อนลงประกาศครับ');
+                    return;
                 }
-            };
 
-            if (fileInput.files && fileInput.files[0]) {
-                compressImage(fileInput.files[0], (compressedDataUrl) => {
-                    saveToFirestore(compressedDataUrl);
-                });
-            } else {
-                saveToFirestore(null);
+                // ดักจับ Error ตอนเปิดหน้าต่างรหัสผ่าน
+                const success = await showPinModal();
+                if (!success) return;
+
+                if (containsBadWords(name) || containsBadWords(details)) {
+                    alert('🚫 ขออภัยครับ! ระบบตรวจพบคำไม่สุภาพ กรุณาแก้ไขข้อความก่อนลงประกาศครับ');
+                    return;
+                }
+
+                const submitBtn = this.querySelector('button[type="submit"]');
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> กำลังส่งข้อมูล...';
+
+                const saveToFirestore = async (imageBase64) => {
+                    try {
+                        await db.collection("items").add({
+                            type, name, location, date, details, contact,
+                            image: imageBase64,
+                            createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                        });
+                        postFormEl.reset();
+                        document.getElementById('itemDate').valueAsDate = new Date();
+                        alert('✅ ลงประกาศสำเร็จ!');
+                    } catch (error) {
+                        console.error("Error adding document: ", error);
+                        alert('❌ เกิดข้อผิดพลาดในการบันทึก: ' + error.message);
+                    } finally {
+                        submitBtn.disabled = false;
+                        submitBtn.innerHTML = '<i class="fas fa-paper-plane"></i> ลงประกาศทันที';
+                    }
+                };
+
+                if (fileInput.files && fileInput.files[0]) {
+                    compressImage(fileInput.files[0], (compressedDataUrl) => {
+                        saveToFirestore(compressedDataUrl);
+                    });
+                } else {
+                    saveToFirestore(null);
+                }
+            } catch (err) {
+                alert("❌ ระบบขัดข้อง: " + err.message);
             }
         });
     }
